@@ -84,6 +84,7 @@ const NhanVienSchema = new mongoose.Schema(
     },
 );
 
+// Hash password to DB
 NhanVienSchema.pre('save', async function (next) {
     if (!this.isModified('password')) {
         next();
@@ -91,6 +92,14 @@ NhanVienSchema.pre('save', async function (next) {
     const salt = bcrypt.genSaltSync(10);
     this.password = await bcrypt.hashSync(this.password, salt);
 });
+
+// Check req.body.password is same password in DB
+// password: req.body.password
+NhanVienSchema.methods = {
+    isCorrectPassword: async function (password) {
+        return await bcrypt.compare(password, this.password);
+    },
+};
 
 //Export the model
 module.exports = mongoose.model('NhanVien', NhanVienSchema);

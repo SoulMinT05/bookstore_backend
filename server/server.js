@@ -13,7 +13,7 @@ dbConnect();
 route(app);
 
 app.use('/', (req, res) => {
-    res.send('SERVER ONLINE');
+    res.send('Welcome to my BookStore!');
 });
 
 app.listen(port, () => {
