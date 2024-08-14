@@ -1,6 +1,6 @@
 const router = require('express').Router();
-const NhanVien = require('../controllers/NhanVien');
+const NhanVienController = require('../controllers/NhanVienController');
 
-router.post('/register', NhanVien.register);
+router.post('/register', NhanVienController.register);
 
 module.exports = router;

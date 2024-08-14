@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
 
-const userSchema = new mongoose.Schema(
+const NhanVienSchema = new mongoose.Schema(
     {
         firstName: {
             type: String,
@@ -12,7 +13,7 @@ const userSchema = new mongoose.Schema(
         },
         birthDay: {
             type: Date,
-            required: true,
+            // required: true,
         },
         gender: {
             type: String,
@@ -43,6 +44,10 @@ const userSchema = new mongoose.Schema(
             type: Boolean,
             default: false,
         },
+        role: {
+            type: String,
+            default: 'user',
+        },
         password: {
             type: String,
             required: true,
@@ -69,7 +74,7 @@ const userSchema = new mongoose.Schema(
         passwordResetToken: {
             type: String,
         },
-        passwordExpired: {
+        passwordResetExpires: {
             type: String,
         },
     },
@@ -79,5 +84,13 @@ const userSchema = new mongoose.Schema(
     },
 );
 
+NhanVienSchema.pre('save', async function (next) {
+    if (!this.isModified('password')) {
+        next();
+    }
+    const salt = bcrypt.genSaltSync(10);
+    this.password = await bcrypt.hashSync(this.password, salt);
+});
+
 //Export the model
-module.exports = mongoose.model('NhanVien', userSchema);
+module.exports = mongoose.model('NhanVien', NhanVienSchema);
