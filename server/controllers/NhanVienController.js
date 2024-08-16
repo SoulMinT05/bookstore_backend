@@ -1,5 +1,6 @@
 const NhanVien = require('../models/NhanVien');
 const asyncHandler = require('express-async-handler');
+const jwt = require('jsonwebtoken');
 const { generateAccessToken, generateRefreshToken } = require('../middlewares/jwtMiddleware');
 
 const register = asyncHandler(async (req, res, next) => {
@@ -69,8 +70,45 @@ const getCurrentUser = asyncHandler(async (req, res, next) => {
     });
 });
 
+const refreshCreateNewAccessToken = asyncHandler(async (req, res) => {
+    const cookie = req.cookies;
+    if (!cookie && !cookie.refreshToken) throw new Error('No refresh token in cookies');
+
+    // If isCheckRefreshToken error => it stops and returns immediately
+    const isCheckRefreshToken = await jwt.verify(cookie.refreshToken, process.env.JWT_REFRESH_TOKEN_SECRET);
+    const user = await NhanVien.findOne({ _id: isCheckRefreshToken._id, refreshToken: cookie.refreshToken });
+    return res.status(200).json({
+        success: user ? true : false,
+        newAccessToken: user ? generateAccessToken(user._id, user.isAdmin, user.role) : 'Refresh token not matched',
+    });
+});
+
+const logout = asyncHandler(async (req, res) => {
+    const cookie = req.cookies;
+    if (!cookie || !cookie.refreshToken) throw new Error('Not found refresh token in cookies');
+    // Delete refreshToken in DB
+    await NhanVien.findOneAndUpdate(
+        { refreshToken: cookie.refreshToken },
+        {
+            refreshToken: '',
+        },
+        { new: true },
+    );
+    // Delete refreshToken in cookies
+    res.clearCookie('refreshToken', {
+        httpOnly: true,
+        secure: true,
+    });
+    return res.status(200).json({
+        success: true,
+        message: 'Logout successfully',
+    });
+});
+
 module.exports = {
     register,
     login,
     getCurrentUser,
+    refreshCreateNewAccessToken,
+    logout,
 };
