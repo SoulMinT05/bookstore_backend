@@ -1,5 +1,5 @@
 const nhanVienRoute = require('./NhanVien');
-const { notFound, errorHandler } = require('../middlewares/errorHandler');
+const { notFound, errorHandler } = require('../middlewares/errorHandlerMiddleware');
 
 const route = (app) => {
     app.use('/api/nhanVien', nhanVienRoute);
