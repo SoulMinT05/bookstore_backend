@@ -24,4 +24,28 @@ const verifyAccessToken = asyncHandler(async (req, res, next) => {
     }
 });
 
-module.exports = { verifyAccessToken };
+const checkIsStaff = asyncHandler(async (req, res, next) => {
+    const { isAdmin, role } = req.user;
+    if (role !== 'staff') {
+        res.status(401).json({
+            success: false,
+            message: 'Require admin role',
+        });
+    }
+    next();
+});
+
+const checkIsAdmin = asyncHandler(async (req, res, next) => {
+    const { isAdmin, role } = req.user;
+    console.log('isAdmin: ', isAdmin);
+    console.log('role: ', role);
+    if (isAdmin === false && role !== 'admin') {
+        res.status(401).json({
+            success: false,
+            message: 'Require admin role',
+        });
+    }
+    if (isAdmin === true || role === 'admin') next();
+});
+
+module.exports = { verifyAccessToken, checkIsStaff, checkIsAdmin };

@@ -37,14 +37,14 @@ const login = asyncHandler(async (req, res, next) => {
     }
     const user = await NhanVien.findOne({ email });
     if (user && (await user.isCorrectPassword(password))) {
-        const { password, isAdmin, role, ...userData } = user._doc;
+        const { password, isAdmin, role, refreshToken, ...userData } = user._doc;
         // Add accessToken, refreshToken
         const accessToken = generateAccessToken(userData._id, isAdmin, role);
-        const refreshToken = generateRefreshToken(userData._id);
+        const newRefreshToken = generateRefreshToken(userData._id);
         // Save refreshToken to DB
-        await NhanVien.findByIdAndUpdate(userData._id, { refreshToken }, { new: true });
+        await NhanVien.findByIdAndUpdate(userData._id, { refreshToken: newRefreshToken }, { new: true });
         // Save refreshToken to cookie
-        res.cookie('refreshToken', refreshToken, {
+        res.cookie('refreshToken', newRefreshToken, {
             httpOnly: true,
             secure: false,
             path: '/',
@@ -68,7 +68,7 @@ const getCurrentUser = asyncHandler(async (req, res, next) => {
     console.log('req.user: ', req.user);
     const user = await NhanVien.findById(_id).select('-refreshToken -role -isAdmin -password');
     return res.status(200).json({
-        success: true,
+        success: user ? true : false,
         result: user ? user : 'User not found',
     });
 });
@@ -114,7 +114,6 @@ const logout = asyncHandler(async (req, res) => {
 // Client send api with token
 // Check token is same with token of server send mail?
 // Change password
-
 const forgotPassword = asyncHandler(async (req, res) => {
     const { email } = req.query;
     if (!email) throw new Error('Email not found');
@@ -141,7 +140,6 @@ const forgotPassword = asyncHandler(async (req, res) => {
 });
 
 const resetPassword = asyncHandler(async (req, res) => {
-    console.log('req.body: ', req.body);
     const { password, token } = req.body;
     if (!password || !token) throw new Error('Missing password or token');
     const passwordResetToken = crypto.createHash('sha256').update(token).digest('hex');
@@ -159,6 +157,54 @@ const resetPassword = asyncHandler(async (req, res) => {
     });
 });
 
+const getAllUsers = asyncHandler(async (req, res) => {
+    const users = await NhanVien.find().select('-refreshToken -role -isAdmin -password');
+    return res.status(200).json({
+        success: users ? true : false,
+        users,
+    });
+});
+
+const deleteUser = asyncHandler(async (req, res) => {
+    const { _id } = req.query;
+    if (!_id) {
+        throw new Error('User not found');
+    }
+    const user = await NhanVien.findByIdAndDelete(_id);
+    return res.status(200).json({
+        success: user ? true : false,
+        message: user ? `Deleted user with ${user.email} successfully` : 'Deleted user failed ',
+    });
+});
+
+const updateInfoFromUser = asyncHandler(async (req, res) => {
+    const { _id } = req.user;
+    if (!_id || Object.keys(req.body).length === 0) {
+        throw new Error('Miss input');
+    }
+    const user = await NhanVien.findByIdAndUpdate(_id, req.body, { new: true }).select(
+        '-password -refreshToken -isAdmin -role',
+    );
+    return res.status(200).json({
+        success: user ? true : false,
+        message: user ? user : 'Updated user failed',
+    });
+});
+
+const updateInfoFromAdmin = asyncHandler(async (req, res) => {
+    const { userId } = req.params;
+    if (Object.keys(req.body).length === 0) {
+        throw new Error('Miss input');
+    }
+    const user = await NhanVien.findByIdAndUpdate(userId, req.body, { new: true }).select(
+        '-password -refreshToken -isAdmin -role',
+    );
+    return res.status(200).json({
+        success: user ? true : false,
+        message: user ? user : 'Updated user failed',
+    });
+});
+
 module.exports = {
     register,
     login,
@@ -167,4 +213,8 @@ module.exports = {
     logout,
     forgotPassword,
     resetPassword,
+    getAllUsers,
+    deleteUser,
+    updateInfoFromUser,
+    updateInfoFromAdmin,
 };

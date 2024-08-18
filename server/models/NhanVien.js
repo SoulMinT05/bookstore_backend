@@ -68,7 +68,7 @@ const NhanVienSchema = new mongoose.Schema(
             type: String,
         },
         passwordChangedAt: {
-            type: String,
+            type: Date,
         },
         passwordResetToken: {
             type: String,
