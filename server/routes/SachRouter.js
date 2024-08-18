@@ -6,4 +6,6 @@ router.post('/createProduct', [verifyAccessToken, checkIsAdmin], SachController.
 router.get('/getAllProducts', SachController.getAllProducts);
 
 router.get('/:productId', SachController.getDetailProduct);
+router.put('/:productId', [verifyAccessToken, checkIsAdmin], SachController.updateProduct);
+router.delete('/:productId', [verifyAccessToken, checkIsAdmin], SachController.deleteProduct);
 module.exports = router;

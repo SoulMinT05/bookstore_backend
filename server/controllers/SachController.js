@@ -24,10 +24,29 @@ const getDetailProduct = asyncHandler(async (req, res, next) => {
 });
 
 const getAllProducts = asyncHandler(async (req, res, next) => {
-    const product = await Sach.find();
+    const products = await Sach.find();
+    return res.status(200).json({
+        success: products ? true : false,
+        products: products ? products : 'Get all products failed',
+    });
+});
+
+const updateProduct = asyncHandler(async (req, res, next) => {
+    const { productId } = req.params;
+    if (req.body && req.body.name) req.body.slug = slugify(req.body.name);
+    const product = await Sach.findByIdAndUpdate(productId, req.body, { new: true });
     return res.status(200).json({
         success: product ? true : false,
-        product: product ? product : 'Get all products failed',
+        product: product ? product : 'Update product failed',
+    });
+});
+
+const deleteProduct = asyncHandler(async (req, res, next) => {
+    const { productId } = req.params;
+    const product = await Sach.findByIdAndDelete(productId);
+    return res.status(200).json({
+        success: product ? true : false,
+        product: product ? product : 'Delete product failed',
     });
 });
 
@@ -35,4 +54,6 @@ module.exports = {
     createProduct,
     getDetailProduct,
     getAllProducts,
+    updateProduct,
+    deleteProduct,
 };
