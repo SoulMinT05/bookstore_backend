@@ -1,4 +1,4 @@
-const NhanVien = require('../models/NhanVien');
+const NhanVien = require('../models/NhanVienModel');
 const asyncHandler = require('express-async-handler');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');

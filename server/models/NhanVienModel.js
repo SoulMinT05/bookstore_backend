@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
-// const crypto = require('crypto-js');
 const crypto = require('crypto');
 
 const NhanVienSchema = new mongoose.Schema(
