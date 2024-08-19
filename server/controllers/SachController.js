@@ -33,20 +33,25 @@ const getAllProducts = asyncHandler(async (req, res, next) => {
     let queryString = JSON.stringify(queriesObj);
     queryString = queryString.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
     const formattedQueries = JSON.parse(queryString);
-    console.log('formattedQueries: ', formattedQueries);
-    // Filtering
-    // Search by word, only have any one word --> search
+
+    // Filtering --> Search by word, only have any one word --> search
     if (queriesObj?.name) {
         formattedQueries.name = {
             $regex: queriesObj.name,
             $options: 'i', // not distinguish between uppercase and lowercase words
         };
     }
-    let queryCommand = Sach.find(formattedQueries); // no use await, it's pending status, when have request, it's still search
+    let queryCommand = Sach.find(formattedQueries); // no use await, it's pending status, when have request, it's still execute
 
-    // Sorting
+    // Sorting --> abc def --> [abc,def] --> abc def
+    if (req.query.sort) {
+        const sortBy = req.query.sort.split(',').join(' ');
+        queryCommand = queryCommand.sort(sortBy);
+        console.log('sortBy: ', sortBy);
+    }
 
     // Executing query
+
     // queryCommand.exec(async(err, response) => {
     //     if (err) throw new Error('err.message: ', err.message);
     //     // Number products that meet condition (counts) !== Number products returned once according to api (formattedQueries)
@@ -58,7 +63,6 @@ const getAllProducts = asyncHandler(async (req, res, next) => {
     //     });
     // });
 
-    // Giả sử queryCommand.exec() trả về một Promise
     Promise.all([queryCommand.exec(), Sach.find(formattedQueries).countDocuments()])
         .then(([response, counts]) => {
             res.status(200).json({
