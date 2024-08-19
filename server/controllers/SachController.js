@@ -41,7 +41,7 @@ const getAllProducts = asyncHandler(async (req, res, next) => {
             $options: 'i', // not distinguish between uppercase and lowercase words
         };
     }
-    let queryCommand = Sach.find(formattedQueries); // no use await, it's pending status, when have request, it's still execute
+    let queryCommand = Sach.find(formattedQueries); // not use await, it's pending status, when have request, it's still execute
 
     // Sorting --> abc def --> [abc,def] --> abc def
     if (req.query.sort) {
@@ -50,25 +50,31 @@ const getAllProducts = asyncHandler(async (req, res, next) => {
         console.log('sortBy: ', sortBy);
     }
 
+    // Field limiting --> only get fields to want select
+    if (req.query.fields) {
+        const fields = req.query.fields.split(',').join(' ');
+        queryCommand = queryCommand.select(fields);
+    }
+
+    // Pagination
+    // limit: Number object that get from DB --> limit: 2 --> get: 1,2
+    // skip: Number object that skip from DB --> skip: 2 --> skip: 1,2 and start with: 3
+    // page=2&limit=10, 1-10 page 1, 11-20 page 2, 21-30 page 3 --> skip: 10
+
+    // a = '2' --> +a --> Number
+    // a = 'bc' --> +a --> NaN
+    const page = +req.query.page || 1;
+    const limit = +req.query.limit || process.env.LIMIT_PRODUCTS;
+    const skip = (page - 1) * limit;
+    queryCommand = queryCommand.skip(skip).limit(limit);
+
     // Executing query
-
-    // queryCommand.exec(async(err, response) => {
-    //     if (err) throw new Error('err.message: ', err.message);
-    //     // Number products that meet condition (counts) !== Number products returned once according to api (formattedQueries)
-    //     const counts = await Sach.find(formattedQueries).countDocuments()
-    //     return res.status(200).json({
-    //         success: response ? true : false,
-    //         products: response ? response : 'Get products failed',
-    //         counts
-    //     });
-    // });
-
     Promise.all([queryCommand.exec(), Sach.find(formattedQueries).countDocuments()])
         .then(([response, counts]) => {
             res.status(200).json({
                 success: response ? true : false,
-                products: response ? response : 'Get products failed',
                 counts,
+                products: response ? response : 'Get products failed',
             });
         })
         .catch((err) => {
