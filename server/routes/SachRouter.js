@@ -4,6 +4,7 @@ const { verifyAccessToken, checkIsStaff, checkIsAdmin } = require('../middleware
 
 router.post('/createProduct', [verifyAccessToken, checkIsAdmin], SachController.createProduct);
 router.get('/getAllProducts', SachController.getAllProducts);
+router.put('/ratingProduct', verifyAccessToken, SachController.ratingProduct);
 
 router.get('/:productId', SachController.getDetailProduct);
 router.put('/:productId', [verifyAccessToken, checkIsAdmin], SachController.updateProduct);

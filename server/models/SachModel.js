@@ -55,7 +55,7 @@ const ProductSchema = new mongoose.Schema(
                 star: { type: Number },
                 postedBy: {
                     type: mongoose.Types.ObjectId,
-                    ref: 'DocGia',
+                    ref: 'NhanVien',
                 },
                 comment: { type: String },
             },

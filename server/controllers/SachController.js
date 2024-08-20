@@ -104,10 +104,60 @@ const deleteProduct = asyncHandler(async (req, res, next) => {
     });
 });
 
+const ratingProduct = asyncHandler(async (req, res, next) => {
+    const { _id } = req.user;
+    const { star, comment, productId } = req.body;
+    if (!star || !productId) throw new Error('Missing star or forgot choose product');
+    const product = await Sach.findById(productId);
+    const alreadyRating = product?.ratings?.find((element) => element?.postedBy.toString() === _id);
+    // Update star and comment
+    if (alreadyRating) {
+        await Sach.updateOne(
+            {
+                // Check alreadyRating is matched ratings?
+                ratings: { $elemMatch: alreadyRating },
+            },
+            {
+                $set: {
+                    // $: Object inside array ratings matched alreadyRating
+                    'ratings.$.star': star,
+                    'ratings.$.comment': comment,
+                },
+            },
+            { new: true },
+        );
+    } else {
+        // Add star and comment
+        await Sach.findByIdAndUpdate(
+            productId,
+            {
+                $push: { ratings: { star, comment, postedBy: _id } },
+            },
+            { new: true },
+        );
+    }
+
+    // Total ratings
+    const updatedProduct = await Sach.findById(productId);
+    const countRating = updatedProduct.ratings.length;
+    const sumRating = updatedProduct.ratings.reduce((sum, currentRating) => {
+        console.log('typeof currentRating: ', typeof currentRating.star);
+        return sum + +currentRating.star;
+    }, 0);
+    updatedProduct.totalRatings = Math.round((sumRating * 10) / countRating) / 10;
+    await updatedProduct.save();
+
+    return res.status(200).json({
+        status: true,
+        updatedProduct,
+    });
+});
+
 module.exports = {
     createProduct,
     getDetailProduct,
     getAllProducts,
     updateProduct,
     deleteProduct,
+    ratingProduct,
 };
