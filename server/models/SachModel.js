@@ -27,6 +27,10 @@ const ProductSchema = new mongoose.Schema(
             required: false,
         },
         images: { type: Array },
+        brand: {
+            type: String,
+            required: true,
+        },
         publisher: {
             type: mongoose.Types.ObjectId,
             ref: 'NhaXuatBan',

@@ -10,7 +10,7 @@ router.get('/logout', NhanVienController.logout);
 router.get('/forgotPassword', NhanVienController.forgotPassword);
 router.put('/resetPassword', NhanVienController.resetPassword);
 router.get('/getAllUsers', [verifyAccessToken, checkIsAdmin], NhanVienController.getAllUsers);
-router.delete('/deleteUser', [verifyAccessToken, checkIsAdmin], NhanVienController.deleteUser);
+router.delete('/', [verifyAccessToken, checkIsAdmin], NhanVienController.deleteUser);
 // User update info of user, but not admin
 router.put('/updateInfoFromUser', [verifyAccessToken], NhanVienController.updateInfoFromUser);
 router.put('/updateInfoFromAdmin/:userId', [verifyAccessToken, checkIsAdmin], NhanVienController.updateInfoFromAdmin);
