@@ -23,7 +23,6 @@ const updatePublisher = asyncHandler(async (req, res) => {
     const publisher = await NhaXuatBan.findByIdAndUpdate(publisherId, req.body, {
         new: true,
     });
-    console.log('publisher: ', publisher);
     return res.status(200).json({
         success: publisher ? true : false,
         publisher: publisher ? publisher : 'Update publisher failed',
