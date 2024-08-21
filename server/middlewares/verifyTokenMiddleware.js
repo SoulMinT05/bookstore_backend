@@ -18,7 +18,7 @@ const verifyAccessToken = asyncHandler(async (req, res, next) => {
     } else {
         return res.status(401).json({
             success: false,
-            message: 'Require authentication',
+            message: 'Not verify access token. Require authentication',
         });
     }
 });
@@ -36,8 +36,6 @@ const checkIsStaff = asyncHandler(async (req, res, next) => {
 
 const checkIsAdmin = asyncHandler(async (req, res, next) => {
     const { isAdmin, role } = req.user;
-    console.log('isAdmin: ', isAdmin);
-    console.log('role: ', role);
     if (isAdmin === false && role !== 'admin') {
         res.status(401).json({
             success: false,

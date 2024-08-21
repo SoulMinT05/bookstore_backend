@@ -4,6 +4,7 @@ const { verifyAccessToken, checkIsStaff, checkIsAdmin } = require('../middleware
 
 router.post('/createBlog', [verifyAccessToken, checkIsAdmin], BlogController.createBlog);
 router.get('/getAllBlogs', BlogController.getAllBlogs);
+router.put('/likeBlog', [verifyAccessToken], BlogController.likeBlog);
 router.put('/:blogId', [verifyAccessToken, checkIsAdmin], BlogController.updateBlog);
 router.delete('/:blogId', [verifyAccessToken, checkIsAdmin], BlogController.deleteBlog);
 
