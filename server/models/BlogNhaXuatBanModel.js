@@ -21,6 +21,4 @@ const BlogPublisherSchema = new mongoose.Schema(
     },
 );
 
-const Publisher = mongoose.model('BlogNhaXuatBan', BlogPublisherSchema);
-
-module.exports = Publisher;
+module.exports = mongoose.model('BlogNhaXuatBan', BlogPublisherSchema);
