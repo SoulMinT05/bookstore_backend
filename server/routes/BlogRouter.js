@@ -4,7 +4,10 @@ const { verifyAccessToken, checkIsStaff, checkIsAdmin } = require('../middleware
 
 router.post('/createBlog', [verifyAccessToken, checkIsAdmin], BlogController.createBlog);
 router.get('/getAllBlogs', BlogController.getAllBlogs);
-router.put('/likeBlog', [verifyAccessToken], BlogController.likeBlog);
+router.put('/likeBlog/:blogId', [verifyAccessToken], BlogController.likeBlog);
+router.put('/dislikeBlog/:blogId', [verifyAccessToken], BlogController.dislikeBlog);
+
+router.get('/:blogId', BlogController.getDetailBlog);
 router.put('/:blogId', [verifyAccessToken, checkIsAdmin], BlogController.updateBlog);
 router.delete('/:blogId', [verifyAccessToken, checkIsAdmin], BlogController.deleteBlog);
 

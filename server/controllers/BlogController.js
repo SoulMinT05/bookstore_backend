@@ -42,9 +42,10 @@ const deleteBlog = asyncHandler(async (req, res) => {
 // 2. Check if user liked blog --> cancel like, and insert like again
 const likeBlog = asyncHandler(async (req, res) => {
     const { _id } = req.user;
-    const { blogId } = req.body;
+    const { blogId } = req.params;
     if (!blogId) throw new Error('Missing blog Id');
     const blog = await Blog.findById(blogId);
+    const isLiked = blog?.likes.find((element) => element.toString() === _id);
     // 1. Check if user disliked blog
     const isDisliked = blog?.dislikes.find((element) => element.toString() === _id);
     if (isDisliked) {
@@ -52,6 +53,7 @@ const likeBlog = asyncHandler(async (req, res) => {
             blogId,
             {
                 $pull: { dislikes: _id },
+                $push: { likes: _id },
             },
             { new: true },
         );
@@ -61,7 +63,6 @@ const likeBlog = asyncHandler(async (req, res) => {
         });
     }
     // 2. Check if user liked blog
-    const isLiked = blog?.likes.find((element) => element.toString() === _id);
     if (isLiked) {
         const response = await Blog.findByIdAndUpdate(
             blogId,
@@ -89,10 +90,81 @@ const likeBlog = asyncHandler(async (req, res) => {
     }
 });
 
+const dislikeBlog = asyncHandler(async (req, res) => {
+    const { _id } = req.user;
+    const { blogId } = req.params;
+    if (!blogId) throw new Error('Missing blog Id');
+    const blog = await Blog.findById(blogId);
+    const isDisLiked = blog?.dislikes.find((element) => element.toString() === _id);
+    // 1. Check if user liked blog
+    const isLiked = blog?.likes.find((element) => element.toString() === _id);
+    if (isLiked) {
+        const response = await Blog.findByIdAndUpdate(
+            blogId,
+            {
+                $pull: { likes: _id },
+                $push: { dislikes: _id },
+            },
+            { new: true },
+        );
+        return res.json({
+            success: response ? true : false,
+            response,
+        });
+    }
+    // 2. Check if user disliked blog
+
+    if (isDisLiked) {
+        const response = await Blog.findByIdAndUpdate(
+            blogId,
+            {
+                $pull: { dislikes: _id },
+            },
+            { new: true },
+        );
+        return res.json({
+            success: response ? true : false,
+            response,
+        });
+    } else {
+        const response = await Blog.findByIdAndUpdate(
+            blogId,
+            {
+                $push: { dislikes: _id },
+            },
+            { new: true },
+        );
+        return res.json({
+            success: response ? true : false,
+            response,
+        });
+    }
+});
+
+const excludedFields = 'firstName lastName email createdAt updatedAt';
+const getDetailBlog = asyncHandler(async (req, res) => {
+    const { blogId } = req.params;
+    const blog = await Blog.findByIdAndUpdate(
+        blogId,
+        {
+            $inc: { numberViews: 1 },
+        },
+        { new: true },
+    )
+        .populate('likes', excludedFields)
+        .populate('dislikes', excludedFields);
+    return res.status(200).json({
+        success: blog ? true : false,
+        blog: blog ? blog : 'Get detail blog failed',
+    });
+});
+
 module.exports = {
     createBlog,
     getAllBlogs,
     updateBlog,
     deleteBlog,
     likeBlog,
+    dislikeBlog,
+    getDetailBlog,
 };
