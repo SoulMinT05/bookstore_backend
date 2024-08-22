@@ -3,6 +3,7 @@ const sachRouter = require('./SachRouter');
 const nhaXuatBanRouter = require('./NhaXuatBanRouter');
 const blogNhaXuatBanRouter = require('./BlogNhaXuatBanRouter');
 const blogRouter = require('./BlogRouter');
+const supplierRouter = require('./SupplierRouter');
 const { notFound, errorHandler } = require('../middlewares/errorHandlerMiddleware');
 
 const route = (app) => {
@@ -11,6 +12,7 @@ const route = (app) => {
     app.use('/api/publisher', nhaXuatBanRouter);
     app.use('/api/blogPublisher', blogNhaXuatBanRouter);
     app.use('/api/blog', blogRouter);
+    app.use('/api/supplier', supplierRouter);
 
     app.use(notFound);
     app.use(errorHandler);
