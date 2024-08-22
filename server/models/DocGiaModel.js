@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 
-const NhanVienSchema = new mongoose.Schema(
+const UserSchema = new mongoose.Schema(
     {
         firstName: {
             type: String,
@@ -93,7 +93,7 @@ const NhanVienSchema = new mongoose.Schema(
 );
 
 // Hash password to DB
-NhanVienSchema.pre('save', async function (next) {
+UserSchema.pre('save', async function (next) {
     if (!this.isModified('password')) {
         next();
     }
@@ -103,7 +103,7 @@ NhanVienSchema.pre('save', async function (next) {
 
 // Check req.body.password is same password in DB
 // password: req.body.password
-NhanVienSchema.methods = {
+UserSchema.methods = {
     isCorrectPassword: async function (password) {
         return await bcrypt.compare(password, this.password);
     },
@@ -118,4 +118,4 @@ NhanVienSchema.methods = {
 };
 
 //Export the model
-module.exports = mongoose.model('NhanVien', NhanVienSchema);
+module.exports = mongoose.model('DocGia', UserSchema);
