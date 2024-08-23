@@ -153,6 +153,28 @@ const ratingProduct = asyncHandler(async (req, res, next) => {
     });
 });
 
+const uploadImagesProduct = asyncHandler(async (req, res) => {
+    const { productId } = req.params;
+    if (!req.files) throw new Error('Missing req.files');
+    const response = await Sach.findByIdAndUpdate(
+        productId,
+        {
+            $push: {
+                images: {
+                    $each: req.files.map((item) => item.path),
+                },
+            },
+        },
+        { new: true },
+    );
+
+    console.log('req.files: ', req.files);
+    return res.status(200).json({
+        success: response ? true : false,
+        response: response ? response : 'Upload images product failed',
+    });
+});
+
 module.exports = {
     createProduct,
     getDetailProduct,
@@ -160,4 +182,5 @@ module.exports = {
     updateProduct,
     deleteProduct,
     ratingProduct,
+    uploadImagesProduct,
 };
