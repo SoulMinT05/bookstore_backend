@@ -57,10 +57,12 @@ const NhanVienSchema = new mongoose.Schema(
             type: String,
             required: true,
         },
-        cart: {
-            type: Array,
-            default: [],
-        },
+        cart: [
+            {
+                product: { type: mongoose.Types.ObjectId, ref: 'Sach' }, //productId: ObjectId has only String
+                quantityCart: Number,
+            },
+        ],
         wishList: [
             {
                 type: mongoose.Types.ObjectId,

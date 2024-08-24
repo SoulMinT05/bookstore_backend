@@ -225,6 +225,60 @@ const updateAddressUser = asyncHandler(async (req, res) => {
     });
 });
 
+const updateCart = asyncHandler(async (req, res) => {
+    const { _id } = req.user;
+    const { productId, quantityCart } = req.body;
+    if (!productId || !quantityCart) throw new Error('Missing input productId or quantityCart');
+
+    const user = await NhanVien.findById(_id);
+    const alreadyProduct = user?.cart.find((item) => {
+        return item.product.toString() === productId;
+    });
+
+    if (alreadyProduct) {
+        // Change quantity
+        const response = await NhanVien.updateOne(
+            {
+                cart: { $elemMatch: alreadyProduct },
+            },
+            {
+                $set: { 'cart.$.quantityCart': quantityCart },
+            },
+            {
+                new: true,
+            },
+        );
+        return res.status(200).json({
+            success: response ? true : false,
+            response: response ? response : 'Upload cart product failed',
+        });
+    } else {
+        // Create new cart
+        const response = await NhanVien.findByIdAndUpdate(
+            _id,
+            {
+                $push: {
+                    cart: {
+                        product: productId,
+                        quantityCart,
+                    },
+                },
+            },
+            { new: true },
+        );
+        console.log('response: ', response);
+        return res.status(200).json({
+            success: response ? true : false,
+            response: response ? response : 'Upload cart product failed',
+        });
+    }
+
+    // return res.status(200).json({
+    //     success: response ? true : false,
+    //     response: response ? response : 'Upload images product failed',
+    // });
+});
+
 module.exports = {
     register,
     login,
@@ -238,4 +292,5 @@ module.exports = {
     updateInfoFromUser,
     updateInfoFromAdmin,
     updateAddressUser,
+    updateCart,
 };
