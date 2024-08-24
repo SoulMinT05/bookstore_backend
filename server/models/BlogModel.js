@@ -19,14 +19,6 @@ const BlogSchema = new mongoose.Schema(
             type: Number,
             default: 0,
         },
-        // isLiked: {
-        //     type: Boolean,
-        //     default: false,
-        // },
-        // isDisliked: {
-        //     type: Boolean,
-        //     default: false,
-        // },
         likes: [
             {
                 type: mongoose.Types.ObjectId,
@@ -39,7 +31,7 @@ const BlogSchema = new mongoose.Schema(
                 ref: 'NhanVien',
             },
         ],
-        images: {
+        image: {
             type: String,
             default: 'https://wallpapers.com/images/hd/work-desk-blogging-backdrop-ij7yb6kjl1y3kmg1.jpg',
         },

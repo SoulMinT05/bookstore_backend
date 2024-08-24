@@ -10,7 +10,7 @@ cloudinary.config({
 
 const storage = new CloudinaryStorage({
     cloudinary,
-    allowedFormats: ['jpeg', 'jpg', 'png'],
+    allowedFormats: ['jpeg', 'jpg', 'png', 'webp'],
     params: {
         folder: 'bookstore',
     },

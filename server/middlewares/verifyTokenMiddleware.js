@@ -45,4 +45,20 @@ const checkIsAdmin = asyncHandler(async (req, res, next) => {
     if (isAdmin === true || role === 'admin') next();
 });
 
-module.exports = { verifyAccessToken, checkIsStaff, checkIsAdmin };
+const checkAdminOrStaff = (req, res, next) => {
+    checkIsAdmin((req, res), (err) => {
+        if (err) {
+            checkIsStaff(req, res, (err) => {
+                if (err) {
+                    return res.status(403).json({ message: 'Access denied staff' });
+                } else {
+                    next();
+                }
+            });
+        } else {
+            next();
+        }
+    });
+};
+
+module.exports = { verifyAccessToken, checkIsStaff, checkIsAdmin, checkAdminOrStaff };

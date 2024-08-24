@@ -159,6 +159,24 @@ const getDetailBlog = asyncHandler(async (req, res) => {
     });
 });
 
+const uploadImageBlog = asyncHandler(async (req, res) => {
+    const { blogId } = req.params;
+    if (!req.file) throw new Error('Missing req.file');
+    console.log(req.file);
+    const blog = await Blog.findByIdAndUpdate(
+        blogId,
+        {
+            image: req.file.path,
+        },
+        { new: true },
+    );
+    console.log('blog: ', blog);
+    return res.status(200).json({
+        success: blog ? true : false,
+        blog: blog ? blog : 'Update image blog failed',
+    });
+});
+
 module.exports = {
     createBlog,
     getAllBlogs,
@@ -167,4 +185,5 @@ module.exports = {
     likeBlog,
     dislikeBlog,
     getDetailBlog,
+    uploadImageBlog,
 };
