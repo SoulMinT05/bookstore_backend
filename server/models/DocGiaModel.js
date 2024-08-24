@@ -25,15 +25,13 @@ const UserSchema = new mongoose.Schema(
             // required: true,
         },
         // address: {
-        //     type: String,
-        //     // required: true,
+        //     type: Array,
+        //     default: [],
         // },
-        address: [
-            {
-                type: mongoose.Types.ObjectId,
-                ref: 'Address',
-            },
-        ],
+        address: {
+            type: String,
+            // required: true,
+        },
         email: {
             type: String,
             unique: true,

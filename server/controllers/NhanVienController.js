@@ -205,6 +205,26 @@ const updateInfoFromAdmin = asyncHandler(async (req, res) => {
     });
 });
 
+const updateAddressUser = asyncHandler(async (req, res) => {
+    const { _id } = req.user;
+    if (!req.body.address) {
+        throw new Error('Miss input address');
+    }
+    const user = await NhanVien.findByIdAndUpdate(
+        _id,
+        {
+            // $push: { address: req.body.address },
+            address: req.body.address,
+        },
+        { new: true },
+    ).select('-password -refreshToken -isAdmin -role');
+
+    return res.status(200).json({
+        success: user ? true : false,
+        message: user ? user : 'Updated address user failed',
+    });
+});
+
 module.exports = {
     register,
     login,
@@ -217,4 +237,5 @@ module.exports = {
     deleteUser,
     updateInfoFromUser,
     updateInfoFromAdmin,
+    updateAddressUser,
 };

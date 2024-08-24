@@ -8,7 +8,7 @@ const couponRouter = require('./CouponRouter');
 const { notFound, errorHandler } = require('../middlewares/errorHandlerMiddleware');
 
 const route = (app) => {
-    app.use('/api/user', nhanVienRouter);
+    app.use('/api/staff', nhanVienRouter);
     app.use('/api/book', sachRouter);
     app.use('/api/publisher', nhaXuatBanRouter);
     app.use('/api/blogPublisher', blogNhaXuatBanRouter);

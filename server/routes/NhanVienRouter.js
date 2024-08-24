@@ -11,6 +11,8 @@ router.get('/forgotPassword', NhanVienController.forgotPassword);
 router.put('/resetPassword', NhanVienController.resetPassword);
 router.get('/getAllUsers', [verifyAccessToken, checkIsAdmin], NhanVienController.getAllUsers);
 router.delete('/', [verifyAccessToken, checkIsAdmin], NhanVienController.deleteUser);
+router.put('/updateAddressUser', [verifyAccessToken], NhanVienController.updateAddressUser);
+
 // User update info of user, but not admin
 router.put('/updateInfoFromUser', [verifyAccessToken], NhanVienController.updateInfoFromUser);
 router.put('/updateInfoFromAdmin/:userId', [verifyAccessToken, checkIsAdmin], NhanVienController.updateInfoFromAdmin);
