@@ -26,7 +26,6 @@ const NhanVienSchema = new mongoose.Schema(
         },
         address: {
             type: String,
-            // required: true,
         },
         // address: {
         //     type: Array,
@@ -59,14 +58,14 @@ const NhanVienSchema = new mongoose.Schema(
         },
         cart: [
             {
-                product: { type: mongoose.Types.ObjectId, ref: 'Sach' }, //productId: ObjectId has only String
+                product: { type: mongoose.Types.ObjectId, ref: 'Product' }, //productId: ObjectId has only String
                 quantityCart: Number,
             },
         ],
         wishList: [
             {
                 type: mongoose.Types.ObjectId,
-                ref: 'Sach',
+                ref: 'Product',
             },
         ],
         isBlocked: {

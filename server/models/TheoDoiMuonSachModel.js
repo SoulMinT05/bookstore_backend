@@ -10,14 +10,18 @@ const orderSchema = new mongoose.Schema({
         {
             product: {
                 type: mongoose.Types.ObjectId,
-                ref: 'Sach',
-                count: Number,
+                ref: 'Product',
             },
+            count: Number,
         },
     ],
+    // coupon: {
+    //     type: mongoose.Types.ObjectId,
+    //     ref: 'Coupon',
+    // },
     address: {
         type: String,
-        required: true,
+        // required: true,
     },
     startDate: {
         type: Date,
@@ -38,7 +42,7 @@ const orderSchema = new mongoose.Schema({
     },
     quantity: {
         type: Number,
-        required: true,
+        // required: true,
     },
 });
 

@@ -236,6 +236,9 @@ const updateCart = asyncHandler(async (req, res) => {
     });
 
     if (alreadyProduct) {
+        // if has another property like color: black, red --> if (alreadyProduct.color === color) --> code below
+        // else push cart like else alreadyProduct
+
         // Change quantity
         const response = await NhanVien.updateOne(
             {
@@ -272,11 +275,6 @@ const updateCart = asyncHandler(async (req, res) => {
             response: response ? response : 'Upload cart product failed',
         });
     }
-
-    // return res.status(200).json({
-    //     success: response ? true : false,
-    //     response: response ? response : 'Upload images product failed',
-    // });
 });
 
 module.exports = {

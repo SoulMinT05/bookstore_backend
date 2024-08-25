@@ -110,6 +110,7 @@ const ratingProduct = asyncHandler(async (req, res, next) => {
     if (!star || !productId) throw new Error('Missing star or forgot choose product');
     const product = await Sach.findById(productId);
     const alreadyRating = product?.ratings?.find((element) => element?.postedBy.toString() === _id);
+
     // Update star and comment
     if (alreadyRating) {
         await Sach.updateOne(
