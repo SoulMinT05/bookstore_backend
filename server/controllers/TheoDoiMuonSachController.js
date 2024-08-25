@@ -41,6 +41,23 @@ const createOrder = asyncHandler(async (req, res) => {
     });
 });
 
+const getAllOrders = asyncHandler(async (req, res) => {
+    const orders = await Order.find();
+    return res.status(200).json({
+        success: orders ? true : false,
+        orders: orders ? orders : 'Get orders failed',
+    });
+});
+
+const getUserOrderFromUser = asyncHandler(async (req, res) => {
+    const { _id } = req.user;
+    const order = await Order.find({ orderBy: _id });
+    return res.status(200).json({
+        success: order ? true : false,
+        order: order ? order : 'Get order user failed',
+    });
+});
+
 const updateStatusOrder = asyncHandler(async (req, res) => {
     const { orderId } = req.params;
     const { status } = req.body;
@@ -81,6 +98,8 @@ const cancelOrder = asyncHandler(async (req, res) => {
 
 module.exports = {
     createOrder,
+    getAllOrders,
+    getUserOrderFromUser,
     updateStatusOrder,
     cancelOrder,
 };
