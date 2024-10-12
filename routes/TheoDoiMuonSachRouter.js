@@ -6,6 +6,11 @@ router.post('/createOrder', verifyAccessToken, TheoDoiMuonSachController.createO
 router.get('/getAllOrders', [verifyAccessToken, checkIsAdmin], TheoDoiMuonSachController.getAllOrders);
 router.get('/getUserOrderFromUser', [verifyAccessToken], TheoDoiMuonSachController.getUserOrderFromUser);
 router.put('/updateStatus/:orderId', [verifyAccessToken, checkIsAdmin], TheoDoiMuonSachController.updateStatusOrder);
-router.put('/cancelOrderFromAdmin/:orderId', [verifyAccessToken, checkIsAdmin], TheoDoiMuonSachController.cancelOrder);
+router.put(
+    '/cancelOrderFromAdmin/:orderId',
+    [verifyAccessToken, checkIsAdmin],
+    TheoDoiMuonSachController.cancelOrderFromAdmin,
+);
+router.put('/cancelOrderFromUser/:orderId', [verifyAccessToken], TheoDoiMuonSachController.cancelOrderFromUser);
 
 module.exports = router;

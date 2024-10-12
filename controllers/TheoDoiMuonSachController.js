@@ -86,7 +86,7 @@ const updateStatusOrder = asyncHandler(async (req, res) => {
     });
 });
 
-const cancelOrder = asyncHandler(async (req, res) => {
+const cancelOrderFromAdmin = asyncHandler(async (req, res) => {
     const { orderId } = req.params;
     if (!orderId) throw new Error('Order ID is invalid');
 
@@ -101,7 +101,26 @@ const cancelOrder = asyncHandler(async (req, res) => {
     );
     return res.status(200).json({
         success: order ? true : false,
-        order: order ? order : 'Cancel order failed',
+        order: order ? 'Cancel order successfully' : 'Cancel order failed',
+    });
+});
+
+const cancelOrderFromUser = asyncHandler(async (req, res) => {
+    const { orderId } = req.params;
+    if (!orderId) throw new Error('Order ID is invalid');
+
+    const order = await Order.findByIdAndUpdate(
+        orderId,
+        {
+            status: 'rejected',
+        },
+        {
+            new: true,
+        },
+    );
+    return res.status(200).json({
+        success: order ? true : false,
+        order: order ? 'Cancel order successfully' : 'Cancel order failed',
     });
 });
 
@@ -110,5 +129,6 @@ module.exports = {
     getAllOrders,
     getUserOrderFromUser,
     updateStatusOrder,
-    cancelOrder,
+    cancelOrderFromAdmin,
+    cancelOrderFromUser,
 };
