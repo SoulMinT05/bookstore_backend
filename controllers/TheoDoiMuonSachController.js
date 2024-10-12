@@ -1,11 +1,11 @@
 const Order = require('../models/TheoDoiMuonSachModel');
 const Book = require('../models/SachModel');
-const NhanVien = require('../models/NhanVienModel');
+const DocGia = require('../models/DocGiaModel');
 const asyncHandler = require('express-async-handler');
 
 const createOrder = asyncHandler(async (req, res) => {
     const { _id } = req.user;
-    const userCart = await NhanVien.findById(_id).select('cart').populate('cart.product', 'name price'); // --> product
+    const userCart = await DocGia.findById(_id).select('cart').populate('cart.product', 'name price'); // --> product
     // cart: [
     //     {
     //       product: [Object],
@@ -18,7 +18,6 @@ const createOrder = asyncHandler(async (req, res) => {
         product: item.product._id,
         count: item.quantityCart,
     }));
-    //products:  [ { product: new ObjectId('66c1b9fd03d81e939cced631'), count: 18 } ]
     console.log('userCart: ', userCart);
     console.log('products: ', products);
 

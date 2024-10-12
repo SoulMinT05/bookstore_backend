@@ -59,7 +59,7 @@ const ProductSchema = new mongoose.Schema(
                 star: { type: Number },
                 postedBy: {
                     type: mongoose.Types.ObjectId,
-                    ref: 'NhanVien',
+                    ref: 'DocGia',
                 },
                 comment: { type: String },
             },

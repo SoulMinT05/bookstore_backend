@@ -68,7 +68,7 @@ const NhanVienSchema = new mongoose.Schema(
                 ref: 'Product',
             },
         ],
-        isBlocked: {
+        isLocked: {
             type: Boolean,
             default: false,
         },

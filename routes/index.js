@@ -1,4 +1,5 @@
 const nhanVienRouter = require('./NhanVienRouter');
+const docGiaRouter = require('./DocGiaRouter');
 const sachRouter = require('./SachRouter');
 const theoDoiMuonSachRouter = require('./TheoDoiMuonSachRouter');
 const nhaXuatBanRouter = require('./NhaXuatBanRouter');
@@ -11,6 +12,7 @@ const { notFound, errorHandler } = require('../middlewares/errorHandlerMiddlewar
 
 const route = (app) => {
     app.use('/api/staff', nhanVienRouter);
+    app.use('/api/user', docGiaRouter);
     app.use('/api/book', sachRouter);
     app.use('/api/order', theoDoiMuonSachRouter);
     app.use('/api/publisher', nhaXuatBanRouter);

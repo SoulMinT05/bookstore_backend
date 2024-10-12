@@ -22,13 +22,13 @@ const BlogSchema = new mongoose.Schema(
         likes: [
             {
                 type: mongoose.Types.ObjectId,
-                ref: 'NhanVien',
+                ref: 'DocGia',
             },
         ],
         dislikes: [
             {
                 type: mongoose.Types.ObjectId,
-                ref: 'NhanVien',
+                ref: 'DocGia',
             },
         ],
         image: {
