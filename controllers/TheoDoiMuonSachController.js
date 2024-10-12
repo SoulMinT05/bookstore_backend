@@ -1,42 +1,52 @@
 const Order = require('../models/TheoDoiMuonSachModel');
-const Book = require('../models/SachModel');
+const Product = require('../models/SachModel');
 const DocGia = require('../models/DocGiaModel');
 const asyncHandler = require('express-async-handler');
 
 const createOrder = asyncHandler(async (req, res) => {
-    const { _id } = req.user;
-    const userCart = await DocGia.findById(_id).select('cart').populate('cart.product', 'name price'); // --> product
+    const currentUser = req.user._id;
+    const userCart = await DocGia.findById(currentUser).select('cart').populate('cart.product', 'name price'); // --> product
     // cart: [
     //     {
     //       product: [Object],
     //       quantityCart: 18,
-    //       _id: new ObjectId('66c98f4e3332ec89d8296591')
+    //       currentUser: new ObjectId('66c98f4e3332ec89d8296591')
     //     }
     //   ]
 
     const products = userCart?.cart?.map((item) => ({
-        product: item.product._id,
+        product: item.product,
         count: item.quantityCart,
     }));
-    console.log('userCart: ', userCart);
-    console.log('products: ', products);
 
-    const totalQuantity = products.reduce((accumulator, current) => accumulator + current.count, 0);
+    const { orderedProductIds } = req.body; // Array chứa các productId của sản phẩm được order
+    // Lọc ra những sản phẩm được đặt hàng từ giỏ hàng
+    const productsToOrder = products.filter((item) => orderedProductIds.includes(item.product.toString()));
 
-    // const quantityAfterOrder = products.map((product) => {
-    //     const cartItem = userCart.cart.find((item) => item.product.equals(product.product));
-    //     if (cartItem) {
-    //         return { ...product, count: product.count - cartItem.count };
-    //     }
-    //     return product;
-    // });
+    // Tính tổng số lượng của các sản phẩm được đặt hàng
+    const totalQuantity = productsToOrder.reduce((acc, current) => acc + current.count, 0);
 
-    const newOrder = await Order.create({ products, quantity: totalQuantity, orderBy: _id });
+    // Tạo đơn hàng mới
+    const newOrder = await Order.create({ products: productsToOrder, quantity: totalQuantity, orderBy: currentUser });
     await newOrder.save();
     console.log('newOrder: ', newOrder);
+
+    // Xóa các sản phẩm đã được order khỏi giỏ hàng của user
+    const updatedCart = userCart.cart.filter((item) => !orderedProductIds.includes(item.product.toString()));
+    await DocGia.findByIdAndUpdate(currentUser, { cart: updatedCart });
+
+    // Trừ số lượng sản phẩm đã order trong ProductModel
+    const bulkOperations = productsToOrder.map((item) => ({
+        updateOne: {
+            filter: { _id: item.product },
+            update: { $inc: { quantity: -item.count } }, // Trừ đi số lượng
+        },
+    }));
+    await Product.bulkWrite(bulkOperations);
+
     return res.status(200).json({
         success: newOrder ? true : false,
-        newOrder: newOrder ? newOrder : 'Create newOrder failed',
+        newOrder: newOrder ? 'Create new order successfully' : 'Create newOrder failed',
     });
 });
 
