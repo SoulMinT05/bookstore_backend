@@ -342,14 +342,27 @@ const updateCart = asyncHandler(async (req, res) => {
 
 const lockedUser = asyncHandler(async (req, res) => {
     const { userId } = req.params;
-    const { lock } = req.body;
-
-    if (!lock) throw new Error('You must select a lock true or false');
+    const currentUser = req.user;
 
     const user = await DocGia.findById(userId);
     if (!user) throw new Error('User not found!');
 
-    user.isLocked = lock;
+    if (currentUser.role !== 'admin' || currentUser.isAdmin === false) {
+        return res.status(403).json({
+            success: false,
+            message: 'Only admin can lock or unlock users.',
+        });
+    }
+    // Kiểm tra nếu admin cố gắng khóa tài khoản của chính mình
+    if (currentUser._id === userId) {
+        return res.status(403).json({
+            success: false,
+            message: 'Admin cannot lock their own account.',
+        });
+    }
+
+    user.isLocked = !user.isLocked;
+    console.log('req.user: ', req.user);
     await user.save();
     return res.status(200).json({
         success: user.isLocked ? true : false,
