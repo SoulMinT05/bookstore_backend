@@ -1,14 +1,23 @@
 const express = require('express');
 const cookieParser = require('cookie-parser');
 require('dotenv').config();
+const cors = require('cors');
+const bodyParser = require('body-parser');
 
 const dbConnect = require('./config/dbconnect');
 const route = require('./routes/index');
 
 const app = express();
 
-const port = process.env.PORT || 5000;
+app.use(
+    cors({
+        origin: 'http://localhost:3000', // Cho phép yêu cầu từ localhost:3000
+    }),
+);
 
+const port = process.env.PORT || 3001;
+
+app.use(bodyParser.json()); // Để phân tích cú pháp JSON
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());

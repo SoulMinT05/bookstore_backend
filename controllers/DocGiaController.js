@@ -70,7 +70,11 @@ const login = asyncHandler(async (req, res, next) => {
             success: true,
             message: 'Login successfully',
             accessToken,
-            userData,
+            userData: {
+                ...userData,
+                isAdmin, // Adding isAdmin back to the userData
+                role, // Adding role back to the userData
+            },
         });
     } else {
         throw new Error('Error in email and password when logging in!');
@@ -228,9 +232,7 @@ const updateInfoFromUser = asyncHandler(async (req, res) => {
     if (!_id || Object.keys(req.body).length === 0) {
         throw new Error('Miss input');
     }
-    const user = await DocGia.findByIdAndUpdate(_id, req.body, { new: true }).select(
-        '-password -refreshToken -isAdmin -role',
-    );
+    const user = await DocGia.findByIdAndUpdate(_id, req.body, { new: true }).select('-password -refreshToken');
     return res.status(200).json({
         success: user ? true : false,
         message: user ? user : 'Updated user failed',
@@ -245,7 +247,7 @@ const updateInfoFromAdmin = asyncHandler(async (req, res) => {
         req.body.password = await bcrypt.hash(req.body.password, salt);
     }
 
-    const user = await DocGia.findByIdAndUpdate(userId, req.body, { new: true }).select('-password -role');
+    const user = await DocGia.findByIdAndUpdate(userId, req.body, { new: true }).select('-password -refreshToken');
     return res.status(200).json({
         success: user ? true : false,
         message: user ? user : 'Update info user from admin failed',
@@ -278,7 +280,7 @@ const updateAddressUser = asyncHandler(async (req, res) => {
             address: req.body.address,
         },
         { new: true },
-    ).select('-password -refreshToken -isAdmin -role');
+    ).select('-password -refreshToken');
 
     return res.status(200).json({
         success: user ? true : false,
