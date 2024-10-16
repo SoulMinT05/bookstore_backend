@@ -208,7 +208,7 @@ const resetPassword = asyncHandler(async (req, res) => {
 });
 
 const getAllUsers = asyncHandler(async (req, res) => {
-    const users = await DocGia.find().select('-refreshToken -password');
+    const users = await DocGia.find().select('-refreshToken -password -passwordChangedAt ');
     return res.status(200).json({
         success: users ? true : false,
         users,
@@ -250,7 +250,7 @@ const updateInfoFromAdmin = asyncHandler(async (req, res) => {
     const user = await DocGia.findByIdAndUpdate(userId, req.body, { new: true }).select('-password -refreshToken');
     return res.status(200).json({
         success: user ? true : false,
-        message: user ? user : 'Update info user from admin failed',
+        updatedUser: user ? user : 'Update info user from admin failed',
     });
 });
 
@@ -347,7 +347,8 @@ const lockedUser = asyncHandler(async (req, res) => {
     const user = await DocGia.findById(userId);
     if (!user) throw new Error('User not found!');
 
-    if (currentUser.role !== 'admin' || currentUser.isAdmin === false) {
+    // Không được khoá nếu ko phải admin
+    if (currentUser.role !== 'admin') {
         return res.status(403).json({
             success: false,
             message: 'Only admin can lock or unlock users.',
@@ -361,14 +362,15 @@ const lockedUser = asyncHandler(async (req, res) => {
         });
     }
 
-    user.isLocked = !user.isLocked;
-    console.log('req.user: ', req.user);
-    await user.save();
-    return res.status(200).json({
-        success: user.isLocked ? true : false,
-        message: user.isLocked ? 'Lock user successfully' : 'Unlock user successfully',
-        user,
-    });
+    if (currentUser.role === 'admin' || currentUser.isAdmin === true) {
+        user.isLocked = !user.isLocked;
+        await user.save();
+        return res.status(200).json({
+            success: true,
+            message: user.isLocked ? 'Lock user successfully' : 'Unlock user successfully',
+            user,
+        });
+    }
 });
 
 module.exports = {
