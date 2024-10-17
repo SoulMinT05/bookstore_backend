@@ -6,7 +6,7 @@ const createPublisher = asyncHandler(async (req, res) => {
     const publisher = await NhaXuatBan.create(req.body);
     return res.status(200).json({
         success: publisher ? true : false,
-        publisher: publisher ? publisher : 'Create publisher failed',
+        newPublisher: publisher ? publisher : 'Create publisher failed',
     });
 });
 
@@ -25,7 +25,7 @@ const updatePublisher = asyncHandler(async (req, res) => {
     });
     return res.status(200).json({
         success: publisher ? true : false,
-        publisher: publisher ? publisher : 'Update publisher failed',
+        updatedPublisher: publisher ? publisher : 'Update publisher failed',
     });
 });
 

@@ -26,23 +26,25 @@ const ProductSchema = new mongoose.Schema(
             type: String,
             required: false,
         },
-        images: { type: Array },
-        brand: {
-            type: String,
-            required: true,
-        },
-        publisher: {
+
+        // brand: {
+        //     type: String,
+        //     required: true,
+        // },
+        publisherId: {
             type: mongoose.Types.ObjectId,
             ref: 'NhaXuatBan',
             // required: true,
         },
+        // add further than
+        images: { type: Array },
         description: {
             type: String,
-            required: true,
+            // required: true,
         },
         slug: {
             type: String,
-            required: true,
+            // required: true,
             unique: true,
             lowercase: true,
         },

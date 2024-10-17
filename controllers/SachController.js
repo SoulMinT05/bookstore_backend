@@ -1,4 +1,5 @@
 const Sach = require('../models/SachModel');
+const Publisher = require('../models/NhaXuatBanModel');
 const asyncHandler = require('express-async-handler');
 const slugify = require('slugify');
 
@@ -7,7 +8,19 @@ const createProduct = asyncHandler(async (req, res, next) => {
     if (req.body && req.body.name) {
         req.body.slug = slugify(req.body.name);
     }
+
+    // Tìm publisher dựa vào name trong req.body.publisher
+    const publisher = await Publisher.findOne({ name: req.body.publisherName });
+    console.log('publisher: ', publisher);
+    // Nếu không tìm thấy publisher thì báo lỗi
+    if (!publisher) {
+        throw new Error('Publisher not found');
+    }
+    // Liên kết publisherId vào sản phẩm
+    req.body.publisherId = publisher._id;
+
     const newProduct = await Sach.create(req.body);
+    console.log('newProduct: ', newProduct);
     return res.status(200).json({
         success: newProduct ? true : false,
         newProduct: newProduct ? newProduct : 'Create product failed',
@@ -87,11 +100,27 @@ const getAllProducts = asyncHandler(async (req, res, next) => {
 
 const updateProduct = asyncHandler(async (req, res, next) => {
     const { productId } = req.params;
-    if (req.body && req.body.name) req.body.slug = slugify(req.body.name);
+    if (req.body && req.body.name) {
+        req.body.slug = slugify(req.body.name);
+    }
+    if (req.body.publisherName) {
+        // Tìm nhà xuất bản dựa vào tên
+        const publisher = await Publisher.findOne({ name: req.body.publisherName });
+        console.log('publisher: ', publisher);
+
+        // Nếu không tìm thấy publisher, trả về lỗi
+        if (!publisher) {
+            throw new Error('Publisher not found');
+        }
+
+        // Gán publisherId vào req.body
+        req.body.publisherId = publisher._id;
+    }
     const product = await Sach.findByIdAndUpdate(productId, req.body, { new: true });
+    console.log('product: ', product);
     return res.status(200).json({
         success: product ? true : false,
-        product: product ? product : 'Update product failed',
+        updatedProduct: product ? product : 'Update product failed',
     });
 });
 
@@ -100,7 +129,7 @@ const deleteProduct = asyncHandler(async (req, res, next) => {
     const product = await Sach.findByIdAndDelete(productId);
     return res.status(200).json({
         success: product ? true : false,
-        product: product ? product : 'Delete product failed',
+        deletedProduct: product ? product : 'Delete product failed',
     });
 });
 
