@@ -23,6 +23,6 @@ const PublisherSchema = new mongoose.Schema(
     },
 );
 
-const Publisher = mongoose.model('NHAXUATBAN', PublisherSchema);
+const Publisher = mongoose.model('NhaXuatBan', PublisherSchema);
 
 module.exports = Publisher;

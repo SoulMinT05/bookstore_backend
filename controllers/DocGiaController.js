@@ -48,7 +48,7 @@ const login = asyncHandler(async (req, res, next) => {
     }
     const user = await DocGia.findOne({ email });
 
-    if (user.isLocked) throw new Error(`User with email ${user.email} is locked`);
+    if (user.isLocked) throw new Error(`Nguời dùng có email ${user.email} đã bị khoá`);
 
     if (user && (await user.isCorrectPassword(password))) {
         const { password, isAdmin, role, refreshToken, ...userData } = user._doc;

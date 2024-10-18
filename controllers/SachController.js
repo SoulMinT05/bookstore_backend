@@ -3,6 +3,69 @@ const Publisher = require('../models/NhaXuatBanModel');
 const asyncHandler = require('express-async-handler');
 const slugify = require('slugify');
 
+const getAllProducts = asyncHandler(async (req, res, next) => {
+    const queriesObj = { ...req.query };
+
+    // Loại bỏ các trường không cần thiết từ query
+    const excludeFields = ['limit', 'sort', 'page', 'fields'];
+    excludeFields.forEach((element) => delete queriesObj[element]);
+
+    // Định dạng đúng cú pháp cho Mongoose
+    let queryString = JSON.stringify(queriesObj);
+    queryString = queryString.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
+    const formattedQueries = JSON.parse(queryString);
+
+    // Tìm kiếm theo tên sản phẩm (không phân biệt chữ hoa và chữ thường)
+    if (queriesObj?.name) {
+        formattedQueries.name = {
+            $regex: queriesObj.name,
+            $options: 'i', // Không phân biệt chữ hoa và chữ thường
+        };
+    }
+
+    // Thực hiện truy vấn
+    let queryCommand = Sach.find(formattedQueries).populate('publisherId', 'name'); // Populate để lấy name của publisher
+    // Sắp xếp
+    if (req.query.sort) {
+        const sortBy = req.query.sort.split(',').join(' ');
+        queryCommand = queryCommand.sort(sortBy);
+        console.log('sortBy: ', sortBy);
+    }
+
+    // Lọc trường dữ liệu
+    if (req.query.fields) {
+        const fields = req.query.fields.split(',').join(' ');
+        queryCommand = queryCommand.select(fields);
+    }
+
+    // Phân trang
+    // const page = +req.query.page || 1;
+    // const limit = +req.query.limit || process.env.LIMIT_PRODUCTS;
+    // const skip = (page - 1) * limit;
+    // queryCommand = queryCommand.skip(skip).limit(limit);
+
+    // Thực hiện truy vấn và trả về kết quả
+    Promise.all([queryCommand.exec(), Sach.find(formattedQueries).countDocuments()])
+        .then(([response, counts]) => {
+            res.status(200).json({
+                success: response ? true : false,
+                counts,
+                products: response
+                    ? response.map((product) => ({
+                          ...product._doc,
+                          publisherName: product.publisherId ? product.publisherId.name : null,
+                      }))
+                    : 'Get products failed',
+            });
+        })
+        .catch((err) => {
+            res.status(500).json({
+                success: false,
+                message: 'Error: ' + err.message,
+            });
+        });
+});
+
 const createProduct = asyncHandler(async (req, res, next) => {
     if (Object.keys(req.body).length === 0) throw new Error('Missing input');
     if (req.body && req.body.name) {
@@ -10,7 +73,7 @@ const createProduct = asyncHandler(async (req, res, next) => {
     }
 
     // Tìm publisher dựa vào name trong req.body.publisher
-    const publisher = await Publisher.findOne({ name: req.body.publisherName });
+    const publisher = await Publisher.findOne({ name: req.body.publisher });
     console.log('publisher: ', publisher);
     // Nếu không tìm thấy publisher thì báo lỗi
     if (!publisher) {
@@ -19,7 +82,8 @@ const createProduct = asyncHandler(async (req, res, next) => {
     // Liên kết publisherId vào sản phẩm
     req.body.publisherId = publisher._id;
 
-    const newProduct = await Sach.create(req.body);
+    let newProduct = await Sach.create(req.body);
+    newProduct = await newProduct.populate('publisherId', 'name');
     console.log('newProduct: ', newProduct);
     return res.status(200).json({
         success: newProduct ? true : false,
@@ -34,68 +98,6 @@ const getDetailProduct = asyncHandler(async (req, res, next) => {
         success: product ? true : false,
         product: product ? product : 'Get detail product failed',
     });
-});
-
-const getAllProducts = asyncHandler(async (req, res, next) => {
-    const queriesObj = { ...req.query };
-    // Get field out of the query
-    const excludeFields = ['limit', 'sort', 'page', 'fields'];
-    excludeFields.forEach((element) => delete queriesObj[element]);
-
-    // Format for the correct syntax of mongoose
-    let queryString = JSON.stringify(queriesObj);
-    queryString = queryString.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
-    const formattedQueries = JSON.parse(queryString);
-
-    // Filtering --> Search by word, only have any one word --> search
-    if (queriesObj?.name) {
-        formattedQueries.name = {
-            $regex: queriesObj.name,
-            $options: 'i', // not distinguish between uppercase and lowercase words
-        };
-    }
-    let queryCommand = Sach.find(formattedQueries); // not use await, it's pending status, when have request, it's still execute
-
-    // Sorting --> abc def --> [abc,def] --> abc def
-    if (req.query.sort) {
-        const sortBy = req.query.sort.split(',').join(' ');
-        queryCommand = queryCommand.sort(sortBy);
-        console.log('sortBy: ', sortBy);
-    }
-
-    // Field limiting --> only get fields to want select
-    if (req.query.fields) {
-        const fields = req.query.fields.split(',').join(' ');
-        queryCommand = queryCommand.select(fields);
-    }
-
-    // Pagination
-    // limit: Number object that get from DB --> limit: 2 --> get: 1,2
-    // skip: Number object that skip from DB --> skip: 2 --> skip: 1,2 and start with: 3
-    // page=2&limit=10, 1-10 page 1, 11-20 page 2, 21-30 page 3 --> skip: 10
-
-    // a = '2' --> +a --> Number
-    // a = 'bc' --> +a --> NaN
-    const page = +req.query.page || 1;
-    const limit = +req.query.limit || process.env.LIMIT_PRODUCTS;
-    const skip = (page - 1) * limit;
-    queryCommand = queryCommand.skip(skip).limit(limit);
-
-    // Executing query
-    Promise.all([queryCommand.exec(), Sach.find(formattedQueries).countDocuments()])
-        .then(([response, counts]) => {
-            res.status(200).json({
-                success: response ? true : false,
-                counts,
-                products: response ? response : 'Get products failed',
-            });
-        })
-        .catch((err) => {
-            res.status(500).json({
-                success: false,
-                message: 'Error: ' + err.message,
-            });
-        });
 });
 
 const updateProduct = asyncHandler(async (req, res, next) => {
