@@ -17,7 +17,9 @@ app.use(
 
 const port = process.env.PORT || 3001;
 
-app.use(bodyParser.json()); // Để phân tích cú pháp JSON
+// app.use(bodyParser.json()); // Để phân tích cú pháp JSON
+app.use(bodyParser.json({ limit: '10mb' })); // Giới hạn cho JSON
+app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());

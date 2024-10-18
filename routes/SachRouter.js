@@ -3,7 +3,12 @@ const SachController = require('../controllers/SachController');
 const { verifyAccessToken, checkIsStaff, checkIsAdmin } = require('../middlewares/verifyTokenMiddleware');
 const upload = require('../config/cloudinary.config');
 
-router.post('/createProduct', [verifyAccessToken, checkIsAdmin], SachController.createProduct);
+router.post(
+    '/createProduct',
+    [verifyAccessToken, checkIsAdmin],
+    upload.array('images', 10),
+    SachController.createProduct,
+);
 router.get('/getAllProducts', SachController.getAllProducts);
 router.put('/ratingProduct', verifyAccessToken, SachController.ratingProduct);
 

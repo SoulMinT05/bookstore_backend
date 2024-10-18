@@ -2,6 +2,7 @@ const Sach = require('../models/SachModel');
 const Publisher = require('../models/NhaXuatBanModel');
 const asyncHandler = require('express-async-handler');
 const slugify = require('slugify');
+const cloudinary = require('cloudinary').v2;
 
 const getAllProducts = asyncHandler(async (req, res, next) => {
     const queriesObj = { ...req.query };
@@ -68,6 +69,7 @@ const getAllProducts = asyncHandler(async (req, res, next) => {
 
 const createProduct = asyncHandler(async (req, res, next) => {
     if (Object.keys(req.body).length === 0) throw new Error('Missing input');
+    const images = req.files?.map((element) => element.path);
     if (req.body && req.body.name) {
         req.body.slug = slugify(req.body.name);
     }
@@ -82,9 +84,12 @@ const createProduct = asyncHandler(async (req, res, next) => {
     // Liên kết publisherId vào sản phẩm
     req.body.publisherId = publisher._id;
 
+    if (images) req.body.images = images;
+
     let newProduct = await Sach.create(req.body);
     newProduct = await newProduct.populate('publisherId', 'name');
     console.log('newProduct: ', newProduct);
+    console.log('images: ', images);
     return res.status(200).json({
         success: newProduct ? true : false,
         newProduct: newProduct ? newProduct : 'Create product failed',
@@ -119,10 +124,12 @@ const updateProduct = asyncHandler(async (req, res, next) => {
         req.body.publisherId = publisher._id;
     }
     const product = await Sach.findByIdAndUpdate(productId, req.body, { new: true });
-    console.log('product: ', product);
+    const populatedProduct = await product.populate('publisherId', 'name');
+
+    console.log('populatedProduct: ', populatedProduct);
     return res.status(200).json({
-        success: product ? true : false,
-        updatedProduct: product ? product : 'Update product failed',
+        success: populatedProduct ? true : false,
+        updatedProduct: populatedProduct ? populatedProduct : 'Update product failed',
     });
 });
 
@@ -203,7 +210,7 @@ const uploadImagesProduct = asyncHandler(async (req, res) => {
     console.log('req.files: ', req.files);
     return res.status(200).json({
         success: response ? true : false,
-        response: response ? response : 'Upload images product failed',
+        uploadedImages: response ? response : 'Upload images product failed',
     });
 });
 
