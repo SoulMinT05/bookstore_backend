@@ -51,7 +51,15 @@ const createOrder = asyncHandler(async (req, res) => {
 });
 
 const getAllOrders = asyncHandler(async (req, res) => {
-    const orders = await Order.find();
+    const orders = await Order.find()
+        .populate({
+            path: 'orderBy', // Populate thông tin của orderBy
+            select: 'firstName lastName address email', // Chỉ lấy trường name của user
+        })
+        .populate({
+            path: 'products.product', // Populate thông tin của từng sản phẩm trong mảng products
+            select: 'name images', // Lấy các trường name và images của sản phẩm
+        });
     return res.status(200).json({
         success: orders ? true : false,
         orders: orders ? orders : 'Get orders failed',
@@ -124,6 +132,15 @@ const cancelOrderFromUser = asyncHandler(async (req, res) => {
     });
 });
 
+const deleteOrder = asyncHandler(async (req, res, next) => {
+    const { orderId } = req.params;
+    const order = await Order.findByIdAndDelete(orderId);
+    return res.status(200).json({
+        success: order ? true : false,
+        deletedOrder: order ? order : 'Delete order failed',
+    });
+});
+
 module.exports = {
     createOrder,
     getAllOrders,
@@ -131,4 +148,5 @@ module.exports = {
     updateStatusOrder,
     cancelOrderFromAdmin,
     cancelOrderFromUser,
+    deleteOrder,
 };
