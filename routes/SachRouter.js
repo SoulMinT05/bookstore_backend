@@ -19,6 +19,6 @@ router.put(
     SachController.uploadImagesProduct,
 );
 router.get('/:productId', SachController.getDetailProduct);
-router.put('/:productId', [verifyAccessToken, checkIsAdmin], SachController.updateProduct);
+router.put('/:productId', upload.array('images', 10), [verifyAccessToken, checkIsAdmin], SachController.updateProduct);
 router.delete('/:productId', [verifyAccessToken, checkIsAdmin], SachController.deleteProduct);
 module.exports = router;

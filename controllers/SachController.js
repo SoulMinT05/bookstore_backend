@@ -74,14 +74,12 @@ const createProduct = asyncHandler(async (req, res, next) => {
         req.body.slug = slugify(req.body.name);
     }
 
-    // Tìm publisher dựa vào name trong req.body.publisher
     const publisher = await Publisher.findOne({ name: req.body.publisher });
     console.log('publisher: ', publisher);
-    // Nếu không tìm thấy publisher thì báo lỗi
+
     if (!publisher) {
         throw new Error('Publisher not found');
     }
-    // Liên kết publisherId vào sản phẩm
     req.body.publisherId = publisher._id;
 
     if (images) req.body.images = images;
@@ -107,21 +105,37 @@ const getDetailProduct = asyncHandler(async (req, res, next) => {
 
 const updateProduct = asyncHandler(async (req, res, next) => {
     const { productId } = req.params;
+
     if (req.body && req.body.name) {
         req.body.slug = slugify(req.body.name);
     }
+
     if (req.body.publisherName) {
         // Tìm nhà xuất bản dựa vào tên
         const publisher = await Publisher.findOne({ name: req.body.publisherName });
         console.log('publisher: ', publisher);
 
-        // Nếu không tìm thấy publisher, trả về lỗi
         if (!publisher) {
             throw new Error('Publisher not found');
         }
-
         // Gán publisherId vào req.body
         req.body.publisherId = publisher._id;
+    }
+    // Delete image
+    const deleteImages = req.body.deleteImage ? JSON.parse(req.body.deleteImage) : [];
+    if (deleteImages.length > 0) {
+        await Sach.updateOne(
+            { _id: productId },
+            { $pull: { images: { $in: deleteImages } } }, // Xóa tất cả hình ảnh trong mảng deleteImages
+        );
+    }
+    // Add new image
+    const newImages = req.files?.map((element) => element.path);
+    if (newImages && newImages.length > 0) {
+        await Sach.updateOne(
+            { _id: productId },
+            { $push: { images: { $each: newImages } } }, // Sử dụng $push để thêm nhiều hình ảnh
+        );
     }
     const product = await Sach.findByIdAndUpdate(productId, req.body, { new: true });
     const populatedProduct = await product.populate('publisherId', 'name');
