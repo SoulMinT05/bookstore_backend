@@ -8,6 +8,7 @@ router.get('/month/order', [verifyAccessToken, checkIsAdmin], StatisticControlle
 router.get('/month/publisher', [verifyAccessToken, checkIsAdmin], StatisticController.getMonthPublisherStatistics);
 
 router.get('/month', [verifyAccessToken, checkIsAdmin], StatisticController.getStatisticsByMonth);
+router.get('/year', [verifyAccessToken, checkIsAdmin], StatisticController.getStatisticsByYear);
 
 router.get('/users', [verifyAccessToken, checkIsAdmin], StatisticController.getUserStatisticsByDateRange);
 router.get('/products', [verifyAccessToken, checkIsAdmin], StatisticController.getProductStatisticsByDateRange);

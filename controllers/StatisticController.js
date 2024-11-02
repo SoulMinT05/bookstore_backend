@@ -174,20 +174,73 @@ const getStatisticsByMonth = async (req, res) => {
             .populate('orderBy') // Thay đổi đây tùy thuộc vào mối quan hệ của bạn
             .populate('products.product'); // Nếu sản phẩm cũng cần được populate
 
-        // Tính toán số lượng đơn hàng từ thông tin đã populate
-
         const publisherCountCurrent = await Publisher.countDocuments({ createdAt: { $gte: startOfCurrentMonth } });
         const publisherCountLast = await Publisher.countDocuments({
             createdAt: { $gte: startOfLastMonth, $lt: endOfLastMonth },
         });
 
-        // Tính tỷ lệ tăng trưởng
-        // const calculateGrowthRate = (current, last) => (last > 0 ? ((current - last) / (current + last)) * 100 : 0);
         const calculateGrowthRate = (current, last) =>
             current + last > 0 ? ((current - last) / (current + last)) * 100 : 0;
         console.log('calculateGrowthRate: ', calculateGrowthRate);
-        // const calculateGrowthRate = (current, previous) =>
-        //     previous > 0 ? Math.max(((current - previous) / previous) * 100, 0) : 0;
+
+        return res.status(200).json({
+            success: true,
+            users: {
+                title: 'Người dùng',
+                count: userCountCurrent,
+                growthRate: calculateGrowthRate(userCountCurrent, userCountLast),
+            },
+            products: {
+                title: 'Sản phẩm',
+                count: productCountCurrent,
+                growthRate: calculateGrowthRate(productCountCurrent, productCountLast),
+            },
+            orders: {
+                title: 'Đơn mượn',
+                count: orderCountCurrent,
+                populateOrders,
+                growthRate: calculateGrowthRate(orderCountCurrent, orderCountLast),
+            },
+            publishers: {
+                title: 'Nhà xuất bản',
+                count: publisherCountCurrent,
+                growthRate: calculateGrowthRate(publisherCountCurrent, publisherCountLast),
+            },
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message + 'Lỗi' });
+    }
+};
+
+const getStatisticsByYear = async (req, res) => {
+    try {
+        const now = new Date();
+        const startOfCurrentYear = new Date(now.getFullYear(), 0, 1); // Bắt đầu năm hiện tại
+        const startOfLastYear = new Date(now.getFullYear() - 1, 0, 1); // Bắt đầu năm trước
+        const endOfLastYear = new Date(now.getFullYear(), 0, 1); // Kết thúc năm trước
+
+        // Tính tổng số lượng từng thực thể trong năm hiện tại và năm trước
+        const userCountCurrent = await User.countDocuments({ createdAt: { $gte: startOfCurrentYear } });
+        const userCountLast = await User.countDocuments({ createdAt: { $gte: startOfLastYear, $lt: endOfLastYear } });
+        const productCountCurrent = await Product.countDocuments({ createdAt: { $gte: startOfCurrentYear } });
+        const productCountLast = await Product.countDocuments({
+            createdAt: { $gte: startOfLastYear, $lt: endOfLastYear },
+        });
+        const orderCountCurrent = await Order.countDocuments({ createdAt: { $gte: startOfCurrentYear } });
+        const orderCountLast = await Order.countDocuments({
+            createdAt: { $gte: startOfLastYear, $lt: endOfLastYear },
+        });
+        const populateOrders = await Order.find({ createdAt: { $gte: startOfCurrentYear } })
+            .populate('orderBy') // Thay đổi đây tùy thuộc vào mối quan hệ của bạn
+            .populate('products.product'); // Nếu sản phẩm cũng cần được populate
+
+        const publisherCountCurrent = await Publisher.countDocuments({ createdAt: { $gte: startOfCurrentYear } });
+        const publisherCountLast = await Publisher.countDocuments({
+            createdAt: { $gte: startOfLastYear, $lt: endOfLastYear },
+        });
+
+        const calculateGrowthRate = (current, last) =>
+            current + last > 0 ? ((current - last) / (current + last)) * 100 : 0;
 
         return res.status(200).json({
             success: true,
@@ -363,6 +416,7 @@ module.exports = {
     getMonthOrderStatistics,
     getMonthPublisherStatistics,
     getStatisticsByMonth,
+    getStatisticsByYear,
     getUserStatisticsByDateRange,
     getProductStatisticsByDateRange,
     getOrderStatisticsByDateRange,
