@@ -5,183 +5,47 @@ const Order = require('../models/TheoDoiMuonSachModel');
 const asyncHandler = require('express-async-handler');
 const slugify = require('slugify');
 
-const getMonthUserStatistics = async (req, res) => {
-    try {
-        // Tổng số user
-        const totalUsers = await User.countDocuments();
-        console.log('totalUsers: ', totalUsers);
-        // Số lượng user mới tháng này
-        const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-        console.log('startOfMonth: ', startOfMonth);
-        const newUsersThisMonth = await User.countDocuments({
-            createdAt: { $gte: startOfMonth },
-        });
-        // Số lượng user mới tháng trước
-        const startOfLastMonth = new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1);
-        const endOfLastMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-        const newUsersLastMonth = await User.countDocuments({
-            createdAt: { $gte: startOfLastMonth, $lt: endOfLastMonth },
-        });
-
-        // Tính tỷ lệ tăng trưởng
-        const growthRate =
-            newUsersLastMonth > 0 ? ((newUsersThisMonth - newUsersLastMonth) / newUsersLastMonth) * 100 : 0;
-        // const growthRate = newUsersThisMonth - newUsersLastMonth;
-
-        // Trả về kết quả
-        return res.status(200).json({
-            success: true,
-            totalUsers,
-            newUsersThisMonth,
-            newUsersLastMonth,
-            growthRate,
-        });
-    } catch (error) {
-        return res.status(500).json({ success: false, message: error.message });
-    }
-};
-const getMonthProductStatistics = async (req, res) => {
-    try {
-        // Tổng số sản phẩm
-        const totalProducts = await Product.countDocuments();
-        console.log('totalProducts: ', totalProducts);
-
-        // Số lượng sản phẩm mới tháng này
-        const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-        console.log('startOfMonth: ', startOfMonth);
-        const newProductsThisMonth = await Product.countDocuments({
-            createdAt: { $gte: startOfMonth },
-        });
-
-        // Số lượng sản phẩm mới tháng trước
-        const startOfLastMonth = new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1);
-        const endOfLastMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-        const newProductsLastMonth = await Product.countDocuments({
-            createdAt: { $gte: startOfLastMonth, $lt: endOfLastMonth },
-        });
-
-        // Tính tỷ lệ tăng trưởng
-        const growthRate =
-            newProductsLastMonth > 0 ? ((newProductsThisMonth - newProductsLastMonth) / newProductsLastMonth) * 100 : 0;
-
-        // Trả về kết quả
-        return res.status(200).json({
-            success: true,
-            totalProducts,
-            newProductsThisMonth,
-            newProductsLastMonth,
-            growthRate,
-        });
-    } catch (error) {
-        return res.status(500).json({ success: false, message: error.message });
-    }
-};
-
-const getMonthOrderStatistics = async (req, res) => {
-    try {
-        // Tổng số đơn hàng
-        const totalOrders = await Order.countDocuments();
-        console.log('totalOrders: ', totalOrders);
-
-        // Số lượng đơn hàng mới tháng này
-        const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-        console.log('startOfMonth: ', startOfMonth);
-        const newOrdersThisMonth = await Order.countDocuments({
-            createdAt: { $gte: startOfMonth },
-        });
-
-        // Số lượng đơn hàng mới tháng trước
-        const startOfLastMonth = new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1);
-        const endOfLastMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-        const newOrdersLastMonth = await Order.countDocuments({
-            createdAt: { $gte: startOfLastMonth, $lt: endOfLastMonth },
-        });
-
-        // Tính tỷ lệ tăng trưởng
-        const growthRate =
-            newOrdersLastMonth > 0 ? ((newOrdersThisMonth - newOrdersLastMonth) / newOrdersLastMonth) * 100 : 0;
-
-        // Trả về kết quả
-        return res.status(200).json({
-            success: true,
-            totalOrders,
-            newOrdersThisMonth,
-            newOrdersLastMonth,
-            growthRate,
-        });
-    } catch (error) {
-        return res.status(500).json({ success: false, message: error.message });
-    }
-};
-const getMonthPublisherStatistics = async (req, res) => {
-    try {
-        // Tổng số nhà xuất bản
-        const totalPublishers = await Publisher.countDocuments();
-        console.log('totalPublishers: ', totalPublishers);
-
-        // Số lượng nhà xuất bản mới tháng này
-        const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-        console.log('startOfMonth: ', startOfMonth);
-        const newPublishersThisMonth = await Publisher.countDocuments({
-            createdAt: { $gte: startOfMonth },
-        });
-
-        // Số lượng nhà xuất bản mới tháng trước
-        const startOfLastMonth = new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1);
-        const endOfLastMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-        const newPublishersLastMonth = await Publisher.countDocuments({
-            createdAt: { $gte: startOfLastMonth, $lt: endOfLastMonth },
-        });
-
-        // Tính tỷ lệ tăng trưởng
-        const growthRate =
-            newPublishersLastMonth > 0
-                ? ((newPublishersThisMonth - newPublishersLastMonth) / newPublishersLastMonth) * 100
-                : 0;
-
-        // Trả về kết quả
-        return res.status(200).json({
-            success: true,
-            totalPublishers,
-            newPublishersThisMonth,
-            newPublishersLastMonth,
-            growthRate,
-        });
-    } catch (error) {
-        return res.status(500).json({ success: false, message: error.message });
-    }
-};
-
-const getStatisticsByMonth = async (req, res) => {
+const getStatisticsByWeek = async (req, res) => {
     try {
         const now = new Date();
-        const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-        const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-        // Tính tổng số lượng từng thực thể trong tháng hiện tại và tháng trước
-        const userCountCurrent = await User.countDocuments({ createdAt: { $gte: startOfCurrentMonth } });
-        const userCountLast = await User.countDocuments({ createdAt: { $gte: startOfLastMonth, $lt: endOfLastMonth } });
-        const productCountCurrent = await Product.countDocuments({ createdAt: { $gte: startOfCurrentMonth } });
+        // Tìm ngày đầu tiên và cuối cùng của tuần hiện tại
+        const startOfCurrentWeek = new Date(now.setDate(now.getDate() - now.getDay()));
+        const endOfCurrentWeek = new Date(now.setDate(startOfCurrentWeek.getDate() + 7));
+
+        // Tìm ngày đầu tiên và cuối cùng của tuần trước
+        const startOfLastWeek = new Date(now.setDate(startOfCurrentWeek.getDate() - 7));
+        const endOfLastWeek = new Date(startOfCurrentWeek);
+
+        // Tính tổng số lượng từng thực thể trong tuần hiện tại và tuần trước
+        const userCountCurrent = await User.countDocuments({
+            createdAt: { $gte: startOfCurrentWeek, $lt: endOfCurrentWeek },
+        });
+        const userCountLast = await User.countDocuments({ createdAt: { $gte: startOfLastWeek, $lt: endOfLastWeek } });
+        const productCountCurrent = await Product.countDocuments({
+            createdAt: { $gte: startOfCurrentWeek, $lt: endOfCurrentWeek },
+        });
         const productCountLast = await Product.countDocuments({
-            createdAt: { $gte: startOfLastMonth, $lt: endOfLastMonth },
+            createdAt: { $gte: startOfLastWeek, $lt: endOfLastWeek },
         });
-        const orderCountCurrent = await Order.countDocuments({ createdAt: { $gte: startOfCurrentMonth } });
-        const orderCountLast = await Order.countDocuments({
-            createdAt: { $gte: startOfLastMonth, $lt: endOfLastMonth },
+        const orderCountCurrent = await Order.countDocuments({
+            createdAt: { $gte: startOfCurrentWeek, $lt: endOfCurrentWeek },
         });
-        const populateOrders = await Order.find({ createdAt: { $gte: startOfCurrentMonth } })
-            .populate('orderBy') // Thay đổi đây tùy thuộc vào mối quan hệ của bạn
-            .populate('products.product'); // Nếu sản phẩm cũng cần được populate
+        const orderCountLast = await Order.countDocuments({ createdAt: { $gte: startOfLastWeek, $lt: endOfLastWeek } });
 
-        const publisherCountCurrent = await Publisher.countDocuments({ createdAt: { $gte: startOfCurrentMonth } });
+        const populateOrders = await Order.find({ createdAt: { $gte: startOfCurrentWeek, $lt: endOfCurrentWeek } })
+            .populate('orderBy')
+            .populate('products.product');
+
+        const publisherCountCurrent = await Publisher.countDocuments({
+            createdAt: { $gte: startOfCurrentWeek, $lt: endOfCurrentWeek },
+        });
         const publisherCountLast = await Publisher.countDocuments({
-            createdAt: { $gte: startOfLastMonth, $lt: endOfLastMonth },
+            createdAt: { $gte: startOfLastWeek, $lt: endOfLastWeek },
         });
 
         const calculateGrowthRate = (current, last) =>
             current + last > 0 ? ((current - last) / (current + last)) * 100 : 0;
-        console.log('calculateGrowthRate: ', calculateGrowthRate);
 
         return res.status(200).json({
             success: true,
@@ -208,7 +72,150 @@ const getStatisticsByMonth = async (req, res) => {
             },
         });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message + 'Lỗi' });
+        res.status(500).json({ success: false, message: error.message + ' Lỗi' });
+    }
+};
+
+// const getStatisticsByMonth = async (req, res) => {
+//     try {
+//         const now = new Date();
+//         const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+//         const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+//         const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+//         // Tính tổng số lượng từng thực thể trong tháng hiện tại và tháng trước
+//         const userCountCurrent = await User.countDocuments({ createdAt: { $gte: startOfCurrentMonth } });
+//         const userCountLast = await User.countDocuments({ createdAt: { $gte: startOfLastMonth, $lt: endOfLastMonth } });
+//         const productCountCurrent = await Product.countDocuments({ createdAt: { $gte: startOfCurrentMonth } });
+//         const productCountLast = await Product.countDocuments({
+//             createdAt: { $gte: startOfLastMonth, $lt: endOfLastMonth },
+//         });
+//         const orderCountCurrent = await Order.countDocuments({ createdAt: { $gte: startOfCurrentMonth } });
+//         const orderCountLast = await Order.countDocuments({
+//             createdAt: { $gte: startOfLastMonth, $lt: endOfLastMonth },
+//         });
+//         const populateOrders = await Order.find({ createdAt: { $gte: startOfCurrentMonth } })
+//             .populate('orderBy') // Thay đổi đây tùy thuộc vào mối quan hệ của bạn
+//             .populate('products.product'); // Nếu sản phẩm cũng cần được populate
+
+//         const publisherCountCurrent = await Publisher.countDocuments({ createdAt: { $gte: startOfCurrentMonth } });
+//         const publisherCountLast = await Publisher.countDocuments({
+//             createdAt: { $gte: startOfLastMonth, $lt: endOfLastMonth },
+//         });
+
+//         const calculateGrowthRate = (current, last) =>
+//             current + last > 0 ? ((current - last) / (current + last)) * 100 : 0;
+//         console.log('calculateGrowthRate: ', calculateGrowthRate);
+
+//         return res.status(200).json({
+//             success: true,
+//             users: {
+//                 title: 'Người dùng',
+//                 count: userCountCurrent,
+//                 growthRate: calculateGrowthRate(userCountCurrent, userCountLast),
+//             },
+//             products: {
+//                 title: 'Sản phẩm',
+//                 count: productCountCurrent,
+//                 growthRate: calculateGrowthRate(productCountCurrent, productCountLast),
+//             },
+//             orders: {
+//                 title: 'Đơn mượn',
+//                 count: orderCountCurrent,
+//                 populateOrders,
+//                 growthRate: calculateGrowthRate(orderCountCurrent, orderCountLast),
+//             },
+//             publishers: {
+//                 title: 'Nhà xuất bản',
+//                 count: publisherCountCurrent,
+//                 growthRate: calculateGrowthRate(publisherCountCurrent, publisherCountLast),
+//             },
+//         });
+//     } catch (error) {
+//         res.status(500).json({ success: false, message: error.message + 'Lỗi' });
+//     }
+// };
+
+const getStatisticsByMonth = async (req, res) => {
+    try {
+        const now = new Date();
+        const monthCount = 6; // Number of months to include in the report
+        const statisticsMonth = []; // Array to store statisticsMonth for each month
+
+        // Function to calculate growth rate
+        const calculateGrowthRate = (current, last) =>
+            current + last > 0 ? ((current - last) / (current + last)) * 100 : 0;
+
+        // Loop through each month and retrieve statisticsMonth
+        for (let i = 0; i < monthCount; i++) {
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            const endOfMonth = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
+            const previousStartOfMonth = new Date(now.getFullYear(), now.getMonth() - i - 1, 1);
+            const previousEndOfMonth = new Date(now.getFullYear(), now.getMonth() - i, 1);
+
+            // Get counts for the current and previous month
+            const userCountCurrent = await User.countDocuments({ createdAt: { $gte: startOfMonth, $lt: endOfMonth } });
+            const userCountLast = await User.countDocuments({
+                createdAt: { $gte: previousStartOfMonth, $lt: previousEndOfMonth },
+            });
+
+            const productCountCurrent = await Product.countDocuments({
+                createdAt: { $gte: startOfMonth, $lt: endOfMonth },
+            });
+            const productCountLast = await Product.countDocuments({
+                createdAt: { $gte: previousStartOfMonth, $lt: previousEndOfMonth },
+            });
+
+            const orderCountCurrent = await Order.countDocuments({
+                createdAt: { $gte: startOfMonth, $lt: endOfMonth },
+            });
+            const orderCountLast = await Order.countDocuments({
+                createdAt: { $gte: previousStartOfMonth, $lt: previousEndOfMonth },
+            });
+            const populateOrders = await Order.find({
+                createdAt: { $gte: startOfMonth, $lt: endOfMonth },
+            }).populate('orderBy');
+
+            const publisherCountCurrent = await Publisher.countDocuments({
+                createdAt: { $gte: startOfMonth, $lt: endOfMonth },
+            });
+            const publisherCountLast = await Publisher.countDocuments({
+                createdAt: { $gte: previousStartOfMonth, $lt: previousEndOfMonth },
+            });
+
+            // Store statisticsMonth with growth rates
+            statisticsMonth.push({
+                month: startOfMonth.toLocaleString('default', { month: 'long', year: 'numeric' }), // e.g., "October 2024"
+                users: {
+                    title: 'Người dùng',
+                    count: userCountCurrent,
+                    growthRate: calculateGrowthRate(userCountCurrent, userCountLast),
+                },
+                products: {
+                    title: 'Sản phẩm',
+                    count: productCountCurrent,
+                    growthRate: calculateGrowthRate(productCountCurrent, productCountLast),
+                },
+                orders: {
+                    title: 'Đơn mượn',
+                    count: orderCountCurrent,
+                    growthRate: calculateGrowthRate(orderCountCurrent, orderCountLast),
+                    populateOrders,
+                },
+                publishers: {
+                    title: 'Nhà xuất bản',
+                    count: publisherCountCurrent,
+                    growthRate: calculateGrowthRate(publisherCountCurrent, publisherCountLast),
+                },
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            statisticsMonth,
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message + ' Lỗi' });
     }
 };
 
@@ -411,10 +418,7 @@ const getPublisherStatisticsByDateRange = async (req, res) => {
 };
 
 module.exports = {
-    getMonthUserStatistics,
-    getMonthProductStatistics,
-    getMonthOrderStatistics,
-    getMonthPublisherStatistics,
+    getStatisticsByWeek,
     getStatisticsByMonth,
     getStatisticsByYear,
     getUserStatisticsByDateRange,
