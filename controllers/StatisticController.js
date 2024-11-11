@@ -5,141 +5,180 @@ const Order = require('../models/TheoDoiMuonSachModel');
 const asyncHandler = require('express-async-handler');
 const slugify = require('slugify');
 
+// const getStatisticsByWeek = async (req, res) => {
+//     try {
+//         const now = new Date();
+//         const weekCount = 4; // Số tuần để bao gồm trong báo cáo
+//         const statisticsWeek = []; // Mảng để lưu trữ thống kê theo tuần
+
+//         // Hàm tính tỷ lệ tăng trưởng
+//         const calculateGrowthRate = (current, last) =>
+//             current + last > 0 ? ((current - last) / (current + last)) * 100 : 0;
+
+//         // Lấy tuần hiện tại (từ 4/11 đến 10/11)
+//         const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay() + 1); // Ngày đầu tuần (Thứ Hai)
+//         const endOfWeek = new Date(now.getFullYear(), now.getMonth(), startOfWeek.getDate() + 6); // Ngày cuối tuần (Chủ Nhật)
+
+//         for (let i = 0; i < weekCount; i++) {
+//             const currentStartOfWeek = new Date(startOfWeek);
+//             const currentEndOfWeek = new Date(endOfWeek);
+
+//             if (i !== 0) {
+//                 currentStartOfWeek.setDate(currentStartOfWeek.getDate() - 7 * i);
+//                 currentEndOfWeek.setDate(currentEndOfWeek.getDate() - 7 * i);
+//             }
+
+//             // Lấy số lượng người dùng, sản phẩm, đơn hàng và nhà xuất bản với createdAt cũ nhất
+//             const userCountCurrent = await User.countDocuments({
+//                 createdAt: { $lt: currentEndOfWeek, $gte: currentStartOfWeek },
+//             });
+//             const productCountCurrent = await Product.countDocuments({
+//                 createdAt: { $lt: currentEndOfWeek, $gte: currentStartOfWeek },
+//             });
+//             const orderCountCurrent = await Order.countDocuments({
+//                 createdAt: { $lt: currentEndOfWeek, $gte: currentStartOfWeek },
+//             });
+//             const populateOrders = await Order.find({
+//                 createdAt: { $lt: currentEndOfWeek, $gte: currentStartOfWeek },
+//             }).populate('orderBy');
+//             const publisherCountCurrent = await Publisher.countDocuments({
+//                 createdAt: { $lt: currentEndOfWeek, $gte: currentStartOfWeek },
+//             });
+
+//             statisticsWeek.push({
+//                 week: `Từ ${currentStartOfWeek.toLocaleDateString('vi-VN')} đến ${currentEndOfWeek.toLocaleDateString(
+//                     'vi-VN',
+//                 )}`,
+//                 users: {
+//                     title: 'Người dùng',
+//                     count: userCountCurrent,
+//                     growthRate: calculateGrowthRate(userCountCurrent, 0),
+//                 },
+//                 products: {
+//                     title: 'Sản phẩm',
+//                     count: productCountCurrent,
+//                     growthRate: calculateGrowthRate(productCountCurrent, 0),
+//                 },
+//                 orders: {
+//                     title: 'Đơn mượn',
+//                     count: orderCountCurrent,
+//                     growthRate: calculateGrowthRate(orderCountCurrent, 0),
+//                     populateOrders,
+//                 },
+//                 publishers: {
+//                     title: 'Nhà xuất bản',
+//                     count: publisherCountCurrent,
+//                     growthRate: calculateGrowthRate(publisherCountCurrent, 0),
+//                 },
+//             });
+//         }
+
+//         // Sắp xếp statisticsWeek theo ngày bắt đầu
+//         statisticsWeek.sort((a, b) => {
+//             const aStart = new Date(a.week.split(' đến ')[0].replace('Từ ', ''));
+//             const bStart = new Date(b.week.split(' đến ')[0].replace('Từ ', ''));
+//             return aStart - bStart; // Sắp xếp theo ngày bắt đầu
+//         });
+
+//         return res.status(200).json({
+//             success: true,
+//             statisticsWeek,
+//         });
+//     } catch (error) {
+//         res.status(500).json({ success: false, message: error.message + ' Lỗi' });
+//     }
+// };
+
 const getStatisticsByWeek = async (req, res) => {
     try {
         const now = new Date();
+        const weekCount = 4; // Số tuần để bao gồm trong báo cáo
+        const statisticsWeek = []; // Mảng để lưu trữ thống kê theo tuần
 
-        // Tìm ngày đầu tiên và cuối cùng của tuần hiện tại
-        const startOfCurrentWeek = new Date(now.setDate(now.getDate() - now.getDay()));
-        const endOfCurrentWeek = new Date(now.setDate(startOfCurrentWeek.getDate() + 7));
-
-        // Tìm ngày đầu tiên và cuối cùng của tuần trước
-        const startOfLastWeek = new Date(now.setDate(startOfCurrentWeek.getDate() - 7));
-        const endOfLastWeek = new Date(startOfCurrentWeek);
-
-        // Tính tổng số lượng từng thực thể trong tuần hiện tại và tuần trước
-        const userCountCurrent = await User.countDocuments({
-            createdAt: { $gte: startOfCurrentWeek, $lt: endOfCurrentWeek },
-        });
-        const userCountLast = await User.countDocuments({ createdAt: { $gte: startOfLastWeek, $lt: endOfLastWeek } });
-        const productCountCurrent = await Product.countDocuments({
-            createdAt: { $gte: startOfCurrentWeek, $lt: endOfCurrentWeek },
-        });
-        const productCountLast = await Product.countDocuments({
-            createdAt: { $gte: startOfLastWeek, $lt: endOfLastWeek },
-        });
-        const orderCountCurrent = await Order.countDocuments({
-            createdAt: { $gte: startOfCurrentWeek, $lt: endOfCurrentWeek },
-        });
-        const orderCountLast = await Order.countDocuments({ createdAt: { $gte: startOfLastWeek, $lt: endOfLastWeek } });
-
-        const populateOrders = await Order.find({ createdAt: { $gte: startOfCurrentWeek, $lt: endOfCurrentWeek } })
-            .populate('orderBy')
-            .populate('products.product');
-
-        const publisherCountCurrent = await Publisher.countDocuments({
-            createdAt: { $gte: startOfCurrentWeek, $lt: endOfCurrentWeek },
-        });
-        const publisherCountLast = await Publisher.countDocuments({
-            createdAt: { $gte: startOfLastWeek, $lt: endOfLastWeek },
-        });
-
+        // Hàm tính tỷ lệ tăng trưởng
         const calculateGrowthRate = (current, last) =>
             current + last > 0 ? ((current - last) / (current + last)) * 100 : 0;
 
+        // Lấy tuần hiện tại (từ 4/11 đến 10/11)
+        const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay() + 1); // Ngày đầu tuần (Thứ Hai)
+        const endOfWeek = new Date(now.getFullYear(), now.getMonth(), startOfWeek.getDate() + 6); // Ngày cuối tuần (Chủ Nhật)
+
+        for (let i = 0; i < weekCount; i++) {
+            // Tính toán các mốc thời gian cho tuần hiện tại và tuần trước đó
+            const currentStartOfWeek = new Date(startOfWeek);
+            const currentEndOfWeek = new Date(endOfWeek);
+            const previousStartOfWeek = new Date(startOfWeek);
+            const previousEndOfWeek = new Date(endOfWeek);
+
+            // Nếu là tuần đầu tiên (hiện tại), sử dụng dữ liệu của tuần này
+            if (i === 0) {
+                // Lấy dữ liệu cho tuần hiện tại
+                // (Bỏ qua logic tính toán trong mã gốc và thêm logic lấy dữ liệu ở đây)
+            } else {
+                // Thay thế tuần tiếp theo bằng dữ liệu tuần trước
+                currentStartOfWeek.setDate(currentStartOfWeek.getDate() - 7 * i);
+                currentEndOfWeek.setDate(currentEndOfWeek.getDate() - 7 * i);
+            }
+
+            // Lấy thống kê cho tuần
+            const userCountCurrent = await User.countDocuments({
+                createdAt: { $gte: currentStartOfWeek, $lt: currentEndOfWeek },
+            });
+            const productCountCurrent = await Product.countDocuments({
+                createdAt: { $gte: currentStartOfWeek, $lt: currentEndOfWeek },
+            });
+            const orderCountCurrent = await Order.countDocuments({
+                createdAt: { $gte: currentStartOfWeek, $lt: currentEndOfWeek },
+            });
+            const populateOrders = await Order.find({
+                createdAt: { $gte: currentStartOfWeek, $lt: currentEndOfWeek },
+            }).populate('orderBy');
+            const publisherCountCurrent = await Publisher.countDocuments({
+                createdAt: { $gte: currentStartOfWeek, $lt: currentEndOfWeek },
+            });
+
+            // Thay thế bằng dữ liệu trước đó cho các tuần sau
+            statisticsWeek.push({
+                week: `${currentStartOfWeek.toLocaleDateString('vi-VN')} - ${currentEndOfWeek.toLocaleDateString(
+                    'vi-VN',
+                )}`,
+                users: {
+                    title: 'Người dùng',
+                    count: userCountCurrent,
+                    growthRate: calculateGrowthRate(userCountCurrent, 0), // Sử dụng 0 cho tuần trước nếu không có dữ liệu
+                },
+                products: {
+                    title: 'Sản phẩm',
+                    count: productCountCurrent,
+                    growthRate: calculateGrowthRate(productCountCurrent, 0),
+                },
+                orders: {
+                    title: 'Đơn mượn',
+                    count: orderCountCurrent,
+                    growthRate: calculateGrowthRate(orderCountCurrent, 0),
+                    populateOrders,
+                },
+                publishers: {
+                    title: 'Nhà xuất bản',
+                    count: publisherCountCurrent,
+                    growthRate: calculateGrowthRate(publisherCountCurrent, 0),
+                },
+            });
+        }
+
         return res.status(200).json({
             success: true,
-            users: {
-                title: 'Người dùng',
-                count: userCountCurrent,
-                growthRate: calculateGrowthRate(userCountCurrent, userCountLast),
-            },
-            products: {
-                title: 'Sản phẩm',
-                count: productCountCurrent,
-                growthRate: calculateGrowthRate(productCountCurrent, productCountLast),
-            },
-            orders: {
-                title: 'Đơn mượn',
-                count: orderCountCurrent,
-                populateOrders,
-                growthRate: calculateGrowthRate(orderCountCurrent, orderCountLast),
-            },
-            publishers: {
-                title: 'Nhà xuất bản',
-                count: publisherCountCurrent,
-                growthRate: calculateGrowthRate(publisherCountCurrent, publisherCountLast),
-            },
+            statisticsWeek,
         });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message + ' Lỗi' });
     }
 };
 
-// const getStatisticsByMonth = async (req, res) => {
-//     try {
-//         const now = new Date();
-//         const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-//         const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-//         const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
-//         // Tính tổng số lượng từng thực thể trong tháng hiện tại và tháng trước
-//         const userCountCurrent = await User.countDocuments({ createdAt: { $gte: startOfCurrentMonth } });
-//         const userCountLast = await User.countDocuments({ createdAt: { $gte: startOfLastMonth, $lt: endOfLastMonth } });
-//         const productCountCurrent = await Product.countDocuments({ createdAt: { $gte: startOfCurrentMonth } });
-//         const productCountLast = await Product.countDocuments({
-//             createdAt: { $gte: startOfLastMonth, $lt: endOfLastMonth },
-//         });
-//         const orderCountCurrent = await Order.countDocuments({ createdAt: { $gte: startOfCurrentMonth } });
-//         const orderCountLast = await Order.countDocuments({
-//             createdAt: { $gte: startOfLastMonth, $lt: endOfLastMonth },
-//         });
-//         const populateOrders = await Order.find({ createdAt: { $gte: startOfCurrentMonth } })
-//             .populate('orderBy') // Thay đổi đây tùy thuộc vào mối quan hệ của bạn
-//             .populate('products.product'); // Nếu sản phẩm cũng cần được populate
-
-//         const publisherCountCurrent = await Publisher.countDocuments({ createdAt: { $gte: startOfCurrentMonth } });
-//         const publisherCountLast = await Publisher.countDocuments({
-//             createdAt: { $gte: startOfLastMonth, $lt: endOfLastMonth },
-//         });
-
-//         const calculateGrowthRate = (current, last) =>
-//             current + last > 0 ? ((current - last) / (current + last)) * 100 : 0;
-//         console.log('calculateGrowthRate: ', calculateGrowthRate);
-
-//         return res.status(200).json({
-//             success: true,
-//             users: {
-//                 title: 'Người dùng',
-//                 count: userCountCurrent,
-//                 growthRate: calculateGrowthRate(userCountCurrent, userCountLast),
-//             },
-//             products: {
-//                 title: 'Sản phẩm',
-//                 count: productCountCurrent,
-//                 growthRate: calculateGrowthRate(productCountCurrent, productCountLast),
-//             },
-//             orders: {
-//                 title: 'Đơn mượn',
-//                 count: orderCountCurrent,
-//                 populateOrders,
-//                 growthRate: calculateGrowthRate(orderCountCurrent, orderCountLast),
-//             },
-//             publishers: {
-//                 title: 'Nhà xuất bản',
-//                 count: publisherCountCurrent,
-//                 growthRate: calculateGrowthRate(publisherCountCurrent, publisherCountLast),
-//             },
-//         });
-//     } catch (error) {
-//         res.status(500).json({ success: false, message: error.message + 'Lỗi' });
-//     }
-// };
-
 const getStatisticsByMonth = async (req, res) => {
     try {
         const now = new Date();
-        const monthCount = 6; // Number of months to include in the report
+        const monthCount = 12; // Number of months to include in the report
         const statisticsMonth = []; // Array to store statisticsMonth for each month
 
         // Function to calculate growth rate

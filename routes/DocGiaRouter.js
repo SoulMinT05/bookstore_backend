@@ -11,7 +11,7 @@ router.post('/register', DocGiaController.register);
 router.post('/login', DocGiaController.login);
 router.get('/getDetailUser/:userId', [verifyAccessToken], DocGiaController.getDetailUser);
 router.post('/refreshCreateNewAccessToken', DocGiaController.refreshCreateNewAccessToken);
-router.post('/logout', DocGiaController.logout);
+router.post('/logout', [verifyAccessToken], DocGiaController.logout);
 router.post('/forgotPassword', DocGiaController.forgotPassword);
 router.put('/resetPassword', DocGiaController.resetPassword);
 router.put('/updateInfoFromUser', [verifyAccessToken], DocGiaController.updateInfoFromUser);

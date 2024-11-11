@@ -106,7 +106,7 @@ const refreshCreateNewAccessToken = asyncHandler(async (req, res) => {
 
 const logout = asyncHandler(async (req, res) => {
     const cookie = req.cookies;
-    if (!cookie || !cookie.refreshToken) throw new Error('Not found refresh token in cookies');
+    // if (!cookie || !cookie.refreshToken) throw new Error('Not found refresh token in cookies');
     // Delete refreshToken in DB
     await DocGia.findOneAndUpdate(
         { refreshToken: cookie.refreshToken },
