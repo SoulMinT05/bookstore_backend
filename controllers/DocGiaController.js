@@ -21,9 +21,13 @@ const register = asyncHandler(async (req, res, next) => {
 
     const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     if (!passwordRegex.test(password))
-        throw new Error(
-            'Password must be at least 8 characters long, contain one letter, one number, and one special character',
-        );
+        throw new Error('Mật khẩu phải gồm kí tự in hoa, kí tự thường, số và kí tự đặc biệt');
+
+    if (!/^(09|03|07|08|05)\d{8}$/.test(phoneNumber)) {
+        return res
+            .status(400)
+            .json({ message: 'Số điện thoại phải có 10 chữ số và bắt đầu bằng 09, 03, 07, 08 hoặc 05.' });
+    }
 
     const user = await DocGia.findOne({ email });
     if (user) {
@@ -220,6 +224,28 @@ const deleteUser = asyncHandler(async (req, res) => {
     if (!userId) {
         throw new Error('User not found');
     }
+    const currentUser = req.user; // Giả sử thông tin người dùng đang đăng nhập nằm trong req.user
+    if (currentUser.role !== 'admin') {
+        return res.status(403).json({
+            success: false,
+            message: 'Bạn không có quyền xoá người dùng',
+        });
+    }
+
+    const deletedUser = await DocGia.findById(userId);
+    if (!deletedUser) {
+        return res.status(404).json({
+            success: false,
+            message: 'User not found',
+        });
+    }
+    if (currentUser.role === 'admin' && deletedUser.role === 'admin') {
+        return res.status(403).json({
+            success: false,
+            message: 'Bạn không có quyền xoá người cùng chức vụ',
+        });
+    }
+
     const user = await DocGia.findByIdAndDelete(userId);
     return res.status(200).json({
         success: user ? true : false,
@@ -247,6 +273,49 @@ const updateInfoFromAdmin = asyncHandler(async (req, res) => {
         req.body.password = await bcrypt.hash(req.body.password, salt);
     }
 
+    if (!/^(09|03|07|08|05)\d{8}$/.test(req.body.phoneNumber)) {
+        return res
+            .status(400)
+            .json({ message: 'Số điện thoại phải có 10 chữ số và bắt đầu bằng 09, 03, 07, 08 hoặc 05.' });
+    }
+
+    const currentUser = req.user;
+    const updatedUser = await DocGia.findById(userId);
+    if (!updatedUser) {
+        return res.status(404).json({
+            success: false,
+            message: 'User not found',
+        });
+    }
+
+    if (updatedUser.role === currentUser.role) {
+        return res.status(403).json({
+            success: false,
+            message: 'Không được sửa thông tin người cùng chức vụ',
+        });
+    }
+
+    if (currentUser.role === 'staff' && req.body.role !== 'user') {
+        return res.status(403).json({
+            success: false,
+            message: 'Nhân viên không được phép thay đổi vai trò của người khác',
+        });
+    }
+
+    if (currentUser.role === 'staff' && updatedUser.role === 'admin') {
+        return res.status(403).json({
+            success: false,
+            message: 'Nhân viên không được sửa thông tin quản lý',
+        });
+    }
+
+    if (currentUser.role === 'admin' && req.body.role && !['user', 'staff'].includes(req.body.role)) {
+        return res.status(403).json({
+            success: false,
+            message: 'Quản lý chỉ có thể thay đổi vai trò thành user hoặc staff',
+        });
+    }
+
     const user = await DocGia.findByIdAndUpdate(userId, req.body, { new: true }).select('-password -refreshToken');
     return res.status(200).json({
         success: user ? true : false,
@@ -256,18 +325,48 @@ const updateInfoFromAdmin = asyncHandler(async (req, res) => {
 
 const createUserFromAdmin = asyncHandler(async (req, res) => {
     const { firstName, lastName, email, password } = req.body;
+    let { role = 'user' } = req.body;
+
     const passwordUser = password || '123456';
     if (!firstName || !lastName || !email) throw new Error('Missing input create user from admin');
     const user = await DocGia.findOne({ email });
     if (user) {
         throw new Error(`User with firstName ${firstName} and email ${email} has already existed`);
-    } else {
-        const newUser = await DocGia.create({ ...req.body, password: passwordUser });
-        return res.status(200).json({
-            success: newUser ? true : false,
-            newUser: newUser ? newUser : 'Create user account from admin failed',
+    }
+
+    if (!/^(09|03|07|08|05)\d{8}$/.test(req.body.phoneNumber)) {
+        return res
+            .status(400)
+            .json({ message: 'Số điện thoại phải có 10 chữ số và bắt đầu bằng 09, 03, 07, 08 hoặc 05.' });
+    }
+
+    const currentUser = req.user;
+    if (currentUser.role === 'staff' && role !== 'user') {
+        return res.status(400).json({
+            success: false,
+            message: 'Nhân viên chỉ được tạo chức vụ người dùng',
         });
     }
+    if (currentUser.role === 'staff') {
+        role = 'user';
+    }
+    if (currentUser.role === 'admin' && role !== 'staff' && role !== 'user') {
+        return res.status(400).json({
+            success: false,
+            message: 'Chức vụ phải là nhân viên hoặc người dùng',
+        });
+    }
+
+    const newUser = await DocGia.create({
+        ...req.body,
+        password: passwordUser,
+        // role: userRole, // Gán role đã xử lý vào người dùng mới
+    });
+
+    return res.status(200).json({
+        success: newUser ? true : false,
+        newUser: newUser ? newUser : 'Create user account from admin failed',
+    });
 });
 
 const updateAddressUser = asyncHandler(async (req, res) => {
@@ -347,30 +446,34 @@ const lockedUser = asyncHandler(async (req, res) => {
     const user = await DocGia.findById(userId);
     if (!user) throw new Error('User not found!');
 
-    // Không được khoá nếu ko phải admin
-    if (currentUser.role !== 'admin') {
-        return res.status(403).json({
-            success: false,
-            message: 'Only admin can lock or unlock users.',
-        });
-    }
     // Kiểm tra nếu admin cố gắng khóa tài khoản của chính mình
     if (currentUser._id === userId) {
         return res.status(403).json({
             success: false,
-            message: 'Admin cannot lock their own account.',
+            message: 'Không được khoá/mở khoá chính mình.',
+        });
+    }
+    if (currentUser.role === user.role) {
+        return res.status(403).json({
+            success: false,
+            message: 'Không được khoá/mở khoá người cùng chức vụ.',
         });
     }
 
-    if (currentUser.role === 'admin' || currentUser.isAdmin === true) {
-        user.isLocked = !user.isLocked;
-        await user.save();
-        return res.status(200).json({
-            success: true,
-            message: user.isLocked ? 'Lock user successfully' : 'Unlock user successfully',
-            user,
+    if (currentUser.role === 'staff' && user.role === 'admin') {
+        return res.status(403).json({
+            success: false,
+            message: 'Nhân viên không được khoá/mở khoá quản lý.',
         });
     }
+
+    user.isLocked = !user.isLocked;
+    await user.save();
+    return res.status(200).json({
+        success: true,
+        message: user.isLocked ? 'Khoá tài khoản thành công' : 'Mở khoá tài khoản thành công',
+        user,
+    });
 });
 
 module.exports = {

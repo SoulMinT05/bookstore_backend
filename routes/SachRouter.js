@@ -1,11 +1,16 @@
 const router = require('express').Router();
 const SachController = require('../controllers/SachController');
-const { verifyAccessToken, checkIsStaff, checkIsAdmin } = require('../middlewares/verifyTokenMiddleware');
+const {
+    verifyAccessToken,
+    checkIsStaff,
+    checkIsAdmin,
+    checkAdminOrStaff,
+} = require('../middlewares/verifyTokenMiddleware');
 const upload = require('../config/cloudinary.config');
 
 router.post(
     '/createProduct',
-    [verifyAccessToken, checkIsAdmin],
+    [verifyAccessToken, checkAdminOrStaff],
     upload.array('images', 10),
     SachController.createProduct,
 );
@@ -14,11 +19,16 @@ router.put('/ratingProduct', verifyAccessToken, SachController.ratingProduct);
 
 router.put(
     '/uploadImagesProduct/:productId',
-    [verifyAccessToken, checkIsAdmin],
+    [verifyAccessToken, checkAdminOrStaff],
     upload.array('images', 10),
     SachController.uploadImagesProduct,
 );
 router.get('/:productId', SachController.getDetailProduct);
-router.put('/:productId', upload.array('images', 10), [verifyAccessToken, checkIsAdmin], SachController.updateProduct);
-router.delete('/:productId', [verifyAccessToken, checkIsAdmin], SachController.deleteProduct);
+router.put(
+    '/:productId',
+    upload.array('images', 10),
+    [verifyAccessToken, checkAdminOrStaff],
+    SachController.updateProduct,
+);
+router.delete('/:productId', [verifyAccessToken, checkAdminOrStaff], SachController.deleteProduct);
 module.exports = router;

@@ -1,10 +1,15 @@
 const router = require('express').Router();
 const NhaXuatBanController = require('../controllers/NhaXuatBanController');
-const { verifyAccessToken, checkIsStaff, checkIsAdmin } = require('../middlewares/verifyTokenMiddleware');
+const {
+    verifyAccessToken,
+    checkIsStaff,
+    checkIsAdmin,
+    checkAdminOrStaff,
+} = require('../middlewares/verifyTokenMiddleware');
 
-router.post('/createPublisher', [verifyAccessToken, checkIsAdmin], NhaXuatBanController.createPublisher);
-router.get('/getAllPublishers', [verifyAccessToken, checkIsAdmin], NhaXuatBanController.getAllPublishers);
-router.put('/:publisherId', [verifyAccessToken, checkIsAdmin], NhaXuatBanController.updatePublisher);
-router.delete('/:publisherId', [verifyAccessToken, checkIsAdmin], NhaXuatBanController.deletePublisher);
+router.post('/createPublisher', [verifyAccessToken, checkAdminOrStaff], NhaXuatBanController.createPublisher);
+router.get('/getAllPublishers', [verifyAccessToken, checkAdminOrStaff], NhaXuatBanController.getAllPublishers);
+router.put('/:publisherId', [verifyAccessToken, checkAdminOrStaff], NhaXuatBanController.updatePublisher);
+router.delete('/:publisherId', [verifyAccessToken, checkAdminOrStaff], NhaXuatBanController.deletePublisher);
 
 module.exports = router;
