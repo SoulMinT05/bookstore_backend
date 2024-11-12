@@ -139,11 +139,19 @@ const changePassword = asyncHandler(async (req, res) => {
         return res.status(404).json({ success: false, message: 'User not found' });
     }
 
+    if (!newPassword || !currentPassword) {
+        return res.status(400).json({ success: false, message: 'Mật khẩu hiện tại và mật khẩu mới là bắt buộc' });
+    }
+
     // Check the current password
     const isMatchPassword = await user.isCorrectPassword(currentPassword);
     if (!isMatchPassword) {
-        return res.status(400).json({ success: false, message: 'Current password is incorrect' });
+        return res.status(400).json({ success: false, message: 'Mật khẩu hiện tại không đúng' });
     }
+
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!passwordRegex.test(newPassword))
+        throw new Error('Mật khẩu phải gồm kí tự in hoa, kí tự thường, số và kí tự đặc biệt');
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     const updatedUser = await DocGia.findOneAndUpdate(
@@ -257,6 +265,11 @@ const updateInfoFromUser = asyncHandler(async (req, res) => {
     const { _id } = req.user;
     if (!_id || Object.keys(req.body).length === 0) {
         throw new Error('Miss input');
+    }
+    if (!/^(09|03|07|08|05)\d{8}$/.test(req.body.phoneNumber)) {
+        return res
+            .status(400)
+            .json({ message: 'Số điện thoại phải có 10 chữ số và bắt đầu bằng 09, 03, 07, 08 hoặc 05.' });
     }
     const user = await DocGia.findByIdAndUpdate(_id, req.body, { new: true }).select('-password -refreshToken');
     return res.status(200).json({
