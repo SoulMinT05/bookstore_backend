@@ -400,6 +400,56 @@ const updateAddressUser = asyncHandler(async (req, res) => {
     });
 });
 
+const addToCart = asyncHandler(async (req, res) => {
+    const { _id } = req.user;
+    const { productId } = req.body;
+    if (!productId) throw new Error('Missing input productId');
+
+    const user = await DocGia.findById(_id); // Tìm người dùng
+    if (!user) throw new Error('User not found');
+
+    const existingProduct = user.cart.find((item) => item.product.toString() === productId.toString());
+    if (existingProduct) {
+        existingProduct.quantityCart += 1;
+    } else {
+        user.cart.push({ product: productId, quantityCart: 1 });
+    }
+
+    const updatedUser = await DocGia.findByIdAndUpdate(
+        _id,
+        { cart: user.cart },
+        { new: true }, // Chỉ cập nhật giỏ hàng và kiểm tra tính hợp lệ
+    );
+    // Kiểm tra nếu không cập nhật được
+    if (!updatedUser) {
+        return res.status(400).json({
+            success: false,
+            message: 'Failed to update cart',
+        });
+    }
+    // Trả về kết quả
+    return res.status(200).json({
+        success: true,
+        updatedUser,
+        cart: user.cart, // Trả về giỏ hàng đã cập nhật
+    });
+});
+
+const getCart = asyncHandler(async (req, res) => {
+    const { _id } = req.user;
+
+    const user = await DocGia.findById(_id).populate({
+        path: 'cart.product', // Populate trường product trong giỏ hàng
+        select: 'name price images', // Chọn các trường cần thiết từ Product (có thể thay đổi tùy vào nhu cầu)
+    });
+    if (!user) throw new Error('User not found');
+
+    return res.status(200).json({
+        success: true,
+        user,
+    });
+});
+
 const updateCart = asyncHandler(async (req, res) => {
     const { _id } = req.user;
     const { productId, quantityCart } = req.body;
@@ -502,6 +552,8 @@ module.exports = {
     updateInfoFromUser,
     updateInfoFromAdmin,
     updateAddressUser,
+    addToCart,
+    getCart,
     updateCart,
     createUserFromAdmin,
     lockedUser,

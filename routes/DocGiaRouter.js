@@ -27,6 +27,8 @@ router.put('/updateInfoFromUser', [verifyAccessToken], DocGiaController.updateIn
 router.get('/getAllUsers', [verifyAccessToken, checkAdminOrStaff], DocGiaController.getAllUsers);
 router.post('/createUserFromAdmin', [verifyAccessToken, checkAdminOrStaff], DocGiaController.createUserFromAdmin);
 router.post('/changePassword', [verifyAccessToken], DocGiaController.changePassword);
+router.post('/addToCart', [verifyAccessToken], DocGiaController.addToCart);
+router.get('/getCart', [verifyAccessToken], DocGiaController.getCart);
 router.post('/updateCart', [verifyAccessToken], DocGiaController.updateCart);
 router.delete('/:userId', [verifyAccessToken, checkAdminOrStaff], DocGiaController.deleteUser);
 

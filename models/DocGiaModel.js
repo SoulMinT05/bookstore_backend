@@ -56,10 +56,19 @@ const UserSchema = new mongoose.Schema(
             type: String,
             required: true,
         },
-        cart: {
-            type: Array,
-            default: [],
-        },
+        // cart: {
+        //     type: Array,
+        //     default: [],
+        // },
+        cart: [
+            {
+                product: {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: 'Product', // Tham chiếu đến collection 'Product'
+                },
+                quantityCart: Number,
+            },
+        ],
         wishList: [
             {
                 type: mongoose.Types.ObjectId,
