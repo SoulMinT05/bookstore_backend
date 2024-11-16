@@ -408,12 +408,26 @@ const addToCart = asyncHandler(async (req, res) => {
     const user = await DocGia.findById(_id); // Tìm người dùng
     if (!user) throw new Error('User not found');
 
-    const existingProduct = user.cart.find((item) => item.product.toString() === productId.toString());
+    const existingProduct = user.cart.find((item) => {
+        return item.product.toString() === productId.toString();
+    });
     if (existingProduct) {
         existingProduct.quantityCart += 1;
     } else {
         user.cart.push({ product: productId, quantityCart: 1 });
     }
+
+    user.cart = user.cart.reduce((acc, currentItem) => {
+        // acc: giá trị ban đầu là []
+        // currentItem: giá trị hiện tại đang xét
+        const existingItem = acc.find((item) => item.product.toString() === currentItem.product.toString());
+        if (existingItem) {
+            existingItem.quantityCart += currentItem.quantityCart;
+        } else {
+            acc.push(currentItem);
+        }
+        return acc;
+    }, []);
 
     const updatedUser = await DocGia.findByIdAndUpdate(
         _id,
@@ -427,11 +441,54 @@ const addToCart = asyncHandler(async (req, res) => {
             message: 'Failed to update cart',
         });
     }
+    let cartItemCount = 0;
+    cartItemCount = user.cart.length;
     // Trả về kết quả
     return res.status(200).json({
         success: true,
         updatedUser,
+        cartItemCount,
         cart: user.cart, // Trả về giỏ hàng đã cập nhật
+    });
+});
+
+const decreaseProductCart = asyncHandler(async (req, res) => {
+    const { _id } = req.user;
+    const { productId } = req.body;
+    if (!productId) throw new Error('Missing input productId');
+
+    const user = await DocGia.findById(_id); // Tìm người dùng
+    if (!user) throw new Error('User not found');
+
+    const existingProductIndex = user.cart.findIndex((item) => item.product.toString() === productId.toString());
+
+    if (existingProductIndex === -1) {
+        return res.status(404).json({
+            success: false,
+            message: 'Product not found in cart',
+        });
+    }
+
+    // Giảm số lượng hoặc xoá sản phẩm
+    if (user.cart[existingProductIndex].quantityCart > 1) {
+        user.cart[existingProductIndex].quantityCart -= 1; // Giảm số lượng
+    } else {
+        user.cart.splice(existingProductIndex, 1); // Xóa sản phẩm khỏi giỏ hàng
+    }
+
+    // Lưu lại giỏ hàng
+    const updatedUser = await DocGia.findByIdAndUpdate(_id, { cart: user.cart }, { new: true });
+    if (!updatedUser) {
+        return res.status(400).json({
+            success: false,
+            message: 'Failed to update cart',
+        });
+    }
+
+    return res.status(200).json({
+        success: true,
+        message: 'Decreased quantity product in cart successfully',
+        cart: updatedUser.cart,
     });
 });
 
@@ -553,6 +610,7 @@ module.exports = {
     updateInfoFromAdmin,
     updateAddressUser,
     addToCart,
+    decreaseProductCart,
     getCart,
     updateCart,
     createUserFromAdmin,

@@ -250,11 +250,11 @@ const getProductsByPublisher = asyncHandler(async (req, res, next) => {
     const { publisherId } = req.params;
 
     // Tìm các sản phẩm theo publisherId và populate để lấy thông tin chi tiết của publisher
-    const products = await Sach.find({ publisherId }).populate('publisherId', 'name');
-
+    let products = await Sach.find({ publisherId }).populate('publisherId', 'name');
+    products = products.filter((product) => product.publisherId);
     return res.status(200).json({
         success: products.length > 0 ? true : false,
-        products: products.length > 0 ? products : 'No products found for this publisher',
+        products: products,
     });
 });
 
