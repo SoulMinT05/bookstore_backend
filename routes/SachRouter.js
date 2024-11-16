@@ -14,6 +14,7 @@ router.post(
     upload.array('images', 10),
     SachController.createProduct,
 );
+router.get('/relatedProducts', SachController.getProductSimilarPublisher);
 router.get('/getAllProducts', SachController.getAllProducts);
 router.put('/ratingProduct', verifyAccessToken, SachController.ratingProduct);
 
@@ -23,7 +24,7 @@ router.put(
     upload.array('images', 10),
     SachController.uploadImagesProduct,
 );
-router.get('/:productId', SachController.getDetailProduct);
+router.get('/:slug', SachController.getDetailProduct);
 router.put(
     '/:productId',
     upload.array('images', 10),
@@ -31,4 +32,6 @@ router.put(
     SachController.updateProduct,
 );
 router.delete('/:productId', [verifyAccessToken, checkAdminOrStaff], SachController.deleteProduct);
+router.get('/publisher/:publisherId', SachController.getProductsByPublisher);
+
 module.exports = router;

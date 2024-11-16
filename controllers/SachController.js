@@ -95,13 +95,31 @@ const createProduct = asyncHandler(async (req, res, next) => {
 });
 
 const getDetailProduct = asyncHandler(async (req, res, next) => {
-    const { productId } = req.params;
-    const product = await Sach.findById(productId);
+    // const { productId } = req.params;
+    // const product = await Sach.findById(productId);
+    const { slug } = req.params; // Lấy slug từ params
+    const product = await Sach.findOne({ slug: slug }).populate('publisherId', 'name');
     return res.status(200).json({
         success: product ? true : false,
         product: product ? product : 'Get detail product failed',
     });
 });
+
+const getProductSimilarPublisher = async (req, res, next) => {
+    const { publisherId } = req.query;
+    try {
+        const relatedProducts = await Sach.find({
+            publisherId,
+            _id: { $ne: publisherId }, // Loại trừ sản phẩm hiện tại
+        }).limit(6); // Giới hạn số sản phẩm trả về (tùy nhu cầu)
+        return res.status(200).json({
+            success: relatedProducts ? true : false,
+            relatedProducts,
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, error: 'Internal Server Error' });
+    }
+};
 
 const updateProduct = asyncHandler(async (req, res, next) => {
     const { productId } = req.params;
@@ -228,12 +246,26 @@ const uploadImagesProduct = asyncHandler(async (req, res) => {
     });
 });
 
+const getProductsByPublisher = asyncHandler(async (req, res, next) => {
+    const { publisherId } = req.params;
+
+    // Tìm các sản phẩm theo publisherId và populate để lấy thông tin chi tiết của publisher
+    const products = await Sach.find({ publisherId }).populate('publisherId', 'name');
+
+    return res.status(200).json({
+        success: products.length > 0 ? true : false,
+        products: products.length > 0 ? products : 'No products found for this publisher',
+    });
+});
+
 module.exports = {
     createProduct,
     getDetailProduct,
+    getProductSimilarPublisher,
     getAllProducts,
     updateProduct,
     deleteProduct,
     ratingProduct,
     uploadImagesProduct,
+    getProductsByPublisher,
 };

@@ -47,7 +47,7 @@ const login = asyncHandler(async (req, res, next) => {
     if (!email || !password) {
         return res.status(400).json({
             success: false,
-            message: 'Missing input',
+            message: 'Cần nhập email và password',
         });
     }
     const user = await DocGia.findOne({ email });
@@ -81,7 +81,7 @@ const login = asyncHandler(async (req, res, next) => {
             },
         });
     } else {
-        throw new Error('Error in email and password when logging in!');
+        throw new Error('Có lỗi khi đăng nhập!');
     }
 });
 

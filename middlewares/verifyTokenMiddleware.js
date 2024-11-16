@@ -13,6 +13,7 @@ const verifyAccessToken = asyncHandler(async (req, res, next) => {
                 });
             }
             req.user = user;
+            console.log('req.user: ', req.user);
             next();
         });
     } else {
@@ -47,7 +48,7 @@ const checkIsAdmin = asyncHandler(async (req, res, next) => {
 
 const checkAdminOrStaff = (req, res, next) => {
     const { role } = req.user;
-    console.log('req.user: ', req.user);
+
     if (role === 'admin' || role === 'staff') {
         next();
     } else {
