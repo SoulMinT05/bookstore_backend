@@ -67,6 +67,10 @@ const UserSchema = new mongoose.Schema(
                     ref: 'Product', // Tham chiếu đến collection 'Product'
                 },
                 quantityCart: Number,
+                selected: {
+                    type: Boolean,
+                    default: false,
+                },
             },
         ],
         wishList: [
