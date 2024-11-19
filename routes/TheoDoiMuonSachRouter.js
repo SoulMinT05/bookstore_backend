@@ -12,15 +12,16 @@ router.put(
     [verifyAccessToken, checkAdminOrStaff],
     TheoDoiMuonSachController.updateStatusOrder,
 );
-router.put(
-    '/cancelOrderFromAdmin/:orderId',
-    [verifyAccessToken, checkAdminOrStaff],
-    TheoDoiMuonSachController.cancelOrderFromAdmin,
-);
+// router.put(
+//     '/cancelOrderFromAdmin/:orderId',
+//     [verifyAccessToken, checkAdminOrStaff],
+//     TheoDoiMuonSachController.cancelOrderFromAdmin,
+// );
 router.put('/cancelOrderFromUser/:orderId', [verifyAccessToken], TheoDoiMuonSachController.cancelOrderFromUser);
 router.post('/createOrder', verifyAccessToken, TheoDoiMuonSachController.createOrder);
-router.get('/getAllOrders', [verifyAccessToken, checkAdminOrStaff], TheoDoiMuonSachController.getAllOrders);
+router.get('/getAllOrders', [verifyAccessToken], TheoDoiMuonSachController.getAllOrders);
 router.get('/getUserOrderFromUser', [verifyAccessToken], TheoDoiMuonSachController.getUserOrderFromUser);
+router.get('/:orderId', [verifyAccessToken], TheoDoiMuonSachController.getOrderDetails);
 router.delete('/:orderId', [verifyAccessToken], TheoDoiMuonSachController.deleteOrder);
 
 module.exports = router;

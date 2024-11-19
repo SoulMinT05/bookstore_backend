@@ -139,10 +139,11 @@ const createOrder = asyncHandler(async (req, res) => {
         product: item.product,
         count: item.quantityCart,
     }));
+    console.log('products: ', products);
 
     // Lọc ra những sản phẩm được đặt hàng từ giỏ hàng
     const productsToOrder = products.filter((item) => orderedProductIds.includes(item.product._id.toString()));
-
+    console.log('productsToOrder: ', productsToOrder);
     if (productsToOrder.length === 0) {
         return res.status(400).json({
             success: false,
@@ -151,6 +152,7 @@ const createOrder = asyncHandler(async (req, res) => {
     }
 
     const totalQuantity = productsToOrder.reduce((acc, current) => acc + current.count, 0);
+    console.log('totalQuantity: ', totalQuantity);
 
     // Tạo đơn hàng mới
     const newOrder = await Order.create({
@@ -200,9 +202,26 @@ const getAllOrders = asyncHandler(async (req, res) => {
     });
 });
 
+const getOrderDetails = asyncHandler(async (req, res) => {
+    const { orderId } = req.params;
+    const orders = await Order.findById(orderId)
+        .populate({
+            path: 'orderBy', // Populate thông tin của orderBy
+            select: 'firstName lastName address email', // Chỉ lấy trường name của user
+        })
+        .populate({
+            path: 'products.product', // Populate thông tin của từng sản phẩm trong mảng products
+            select: 'name images quantity', // Lấy các trường name và images của sản phẩm
+        });
+    return res.status(200).json({
+        success: orders ? true : false,
+        orders: orders ? orders : 'Get orders failed',
+    });
+});
+
 const getUserOrderFromUser = asyncHandler(async (req, res) => {
     const { _id } = req.user;
-    const order = await Order.find({ orderBy: _id });
+    const order = await Order.find({ orderBy: _id }).populate('products.product');
     return res.status(200).json({
         success: order ? true : false,
         order: order ? order : 'Get order user failed',
@@ -213,6 +232,16 @@ const updateStatusOrder = asyncHandler(async (req, res) => {
     const { orderId } = req.params;
     const { status } = req.body;
     if (!status) throw new Error('Missing input status order');
+
+    const cancelOrder = await Order.findById(orderId);
+
+    if (cancelOrder.status === 'cancel') {
+        return res.status(400).json({
+            success: false,
+            message: 'Không thể thay đổi vì người dùng huỷ đơn',
+        });
+    }
+
     const order = await Order.findByIdAndUpdate(
         orderId,
         {
@@ -228,41 +257,47 @@ const updateStatusOrder = asyncHandler(async (req, res) => {
     });
 });
 
-const cancelOrderFromAdmin = asyncHandler(async (req, res) => {
-    const { orderId } = req.params;
-    if (!orderId) throw new Error('Order ID is invalid');
-
-    const order = await Order.findByIdAndUpdate(
-        orderId,
-        {
-            status: 'rejected',
-        },
-        {
-            new: true,
-        },
-    );
-    return res.status(200).json({
-        success: order ? true : false,
-        order: order ? 'Cancel order successfully' : 'Cancel order failed',
-    });
-});
-
 const cancelOrderFromUser = asyncHandler(async (req, res) => {
     const { orderId } = req.params;
     if (!orderId) throw new Error('Order ID is invalid');
+    const order = await Order.findById(orderId)
+        .populate({
+            path: 'orderBy', // Populate thông tin của người đặt hàng
+            select: 'firstName lastName address email', // Chỉ lấy các trường name và email
+        })
+        .populate({
+            path: 'products.product', // Populate thông tin sản phẩm trong đơn hàng
+            select: 'name images quantity', // Chỉ lấy các trường name, images, và quantity
+        });
 
-    const order = await Order.findByIdAndUpdate(
+    if (order.status !== 'pending') {
+        return res.status(400).json({
+            success: false,
+            message: 'Không thể huỷ bỏ đơn',
+        });
+    }
+
+    const updatedOrder = await Order.findByIdAndUpdate(
         orderId,
         {
-            status: 'rejected',
+            status: 'cancel',
         },
         {
             new: true,
         },
-    );
+    )
+        .populate({
+            path: 'orderBy', // Populate lại thông tin người đặt hàng
+            select: 'firstName lastName address email',
+        })
+        .populate({
+            path: 'products.product', // Populate lại thông tin sản phẩm
+            select: 'name images quantity',
+        });
     return res.status(200).json({
-        success: order ? true : false,
-        order: order ? 'Cancel order successfully' : 'Cancel order failed',
+        success: updatedOrder ? true : false,
+        message: 'Huỷ đơn thành công',
+        updatedOrder,
     });
 });
 
@@ -279,8 +314,9 @@ module.exports = {
     createOrder,
     getAllOrders,
     getUserOrderFromUser,
+    getOrderDetails,
     updateStatusOrder,
-    cancelOrderFromAdmin,
+    // cancelOrderFromAdmin,
     cancelOrderFromUser,
     deleteOrder,
 };
