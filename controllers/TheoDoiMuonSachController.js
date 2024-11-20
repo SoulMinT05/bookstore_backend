@@ -233,12 +233,27 @@ const updateStatusOrder = asyncHandler(async (req, res) => {
     const { status } = req.body;
     if (!status) throw new Error('Missing input status order');
 
-    const cancelOrder = await Order.findById(orderId);
+    const cancelOrder = await Order.findById(orderId)
+        .populate({
+            path: 'orderBy', // Populate thông tin người đặt hàng
+            select: 'firstName lastName address email', // Chỉ lấy các trường name và email
+        })
+        .populate({
+            path: 'products.product', // Populate thông tin sản phẩm trong đơn hàng
+            select: 'name images quantity', // Chỉ lấy các trường name, images, và quantity
+        });
+
+    if (!cancelOrder) {
+        return res.status(404).json({
+            success: false,
+            message: 'Đơn hàng không tồn tại',
+        });
+    }
 
     if (cancelOrder.status === 'cancel') {
         return res.status(400).json({
             success: false,
-            message: 'Không thể thay đổi vì người dùng huỷ đơn',
+            message: 'Không thể thay đổi trạng thái vì đã huỷ đơn',
         });
     }
 
@@ -250,7 +265,15 @@ const updateStatusOrder = asyncHandler(async (req, res) => {
         {
             new: true,
         },
-    );
+    )
+        .populate({
+            path: 'orderBy', // Populate lại thông tin người đặt hàng
+            select: 'firstName lastName address email',
+        })
+        .populate({
+            path: 'products.product', // Populate lại thông tin sản phẩm
+            select: 'name images quantity',
+        });
     return res.status(200).json({
         success: order ? true : false,
         order: order ? order : 'Update status order failed',

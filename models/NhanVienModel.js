@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 
-const NhanVienSchema = new mongoose.Schema(
+const StaffSchema = new mongoose.Schema(
     {
         firstName: {
             type: String,
@@ -12,9 +12,8 @@ const NhanVienSchema = new mongoose.Schema(
             type: String,
             required: true,
         },
-        birthDay: {
+        birthday: {
             type: Date,
-            // required: true,
         },
         gender: {
             type: String,
@@ -24,13 +23,14 @@ const NhanVienSchema = new mongoose.Schema(
             },
             // required: true,
         },
-        address: {
-            type: String,
-        },
         // address: {
         //     type: Array,
         //     default: [],
         // },
+        address: {
+            type: String,
+            // required: true,
+        },
         email: {
             type: String,
             unique: true,
@@ -50,16 +50,27 @@ const NhanVienSchema = new mongoose.Schema(
         },
         role: {
             type: String,
-            default: 'user',
+            default: 'staff',
         },
         password: {
             type: String,
             required: true,
         },
+        // cart: {
+        //     type: Array,
+        //     default: [],
+        // },
         cart: [
             {
-                product: { type: mongoose.Types.ObjectId, ref: 'Product' }, //productId: ObjectId has only String
+                product: {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: 'Product', // Tham chiếu đến collection 'Product'
+                },
                 quantityCart: Number,
+                selected: {
+                    type: Boolean,
+                    default: false,
+                },
             },
         ],
         wishList: [
@@ -92,7 +103,7 @@ const NhanVienSchema = new mongoose.Schema(
 );
 
 // Hash password to DB
-NhanVienSchema.pre('save', async function (next) {
+StaffSchema.pre('save', async function (next) {
     if (!this.isModified('password')) {
         next();
     }
@@ -102,7 +113,7 @@ NhanVienSchema.pre('save', async function (next) {
 
 // Check req.body.password is same password in DB
 // password: req.body.password
-NhanVienSchema.methods = {
+StaffSchema.methods = {
     isCorrectPassword: async function (password) {
         return await bcrypt.compare(password, this.password);
     },
@@ -117,4 +128,4 @@ NhanVienSchema.methods = {
 };
 
 //Export the model
-module.exports = mongoose.model('NhanVien', NhanVienSchema);
+module.exports = mongoose.model('NhanVien', StaffSchema);
