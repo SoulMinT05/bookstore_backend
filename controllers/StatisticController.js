@@ -1,4 +1,4 @@
-const User = require('../models/DocGiaModel');
+const User = require('../models/NhanVienModel');
 const Product = require('../models/SachModel');
 const Publisher = require('../models/NhaXuatBanModel');
 const Order = require('../models/TheoDoiMuonSachModel');

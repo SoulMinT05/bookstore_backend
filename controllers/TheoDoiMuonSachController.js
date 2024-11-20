@@ -1,5 +1,6 @@
 const Order = require('../models/TheoDoiMuonSachModel');
 const Product = require('../models/SachModel');
+const NhanVien = require('../models/NhanVienModel');
 const DocGia = require('../models/DocGiaModel');
 const asyncHandler = require('express-async-handler');
 const moment = require('moment-timezone');
@@ -33,7 +34,7 @@ const moment = require('moment-timezone');
 //     // Đảm bảo thời gian của startDate là 00:00:00
 //     // parsedStartDate.setHours(0, 0, 0, 0);
 
-//     const userCart = await DocGia.findById(currentUser).select('cart').populate('cart.product', 'images name price'); // --> product
+//     const userCart = await NhanVien.findById(currentUser).select('cart').populate('cart.product', 'images name price'); // --> product
 //     // cart: [
 //     //     {
 //     //       product: [Object],
@@ -79,7 +80,7 @@ const moment = require('moment-timezone');
 
 //     // Xóa các sản phẩm đã được order khỏi giỏ hàng của user
 //     const updatedCart = userCart.cart.filter((item) => !orderedProductIds.includes(item.product.toString()));
-//     await DocGia.findByIdAndUpdate(currentUser, { cart: updatedCart });
+//     await NhanVien.findByIdAndUpdate(currentUser, { cart: updatedCart });
 
 //     // Trừ số lượng sản phẩm đã order trong ProductModel
 //     const bulkOperations = productsToOrder.map((item) => ({

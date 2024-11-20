@@ -8,7 +8,7 @@ const { generateAccessToken, generateRefreshToken } = require('../middlewares/jw
 const sendMail = require('../utils/sendMail');
 
 const register = asyncHandler(async (req, res, next) => {
-    const { email, password, firstName, lastName } = req.body;
+    const { email, password, firstName, lastName, phoneNumber } = req.body;
     if (!email || !password || !firstName || !lastName) {
         return res.status(400).json({
             success: false,
@@ -337,48 +337,59 @@ const updateInfoFromAdmin = asyncHandler(async (req, res) => {
 });
 
 const createUserFromAdmin = asyncHandler(async (req, res) => {
-    const { firstName, lastName, email, password } = req.body;
-    let { role = 'user' } = req.body;
+    const { firstName, lastName, email, password, role = 'staff' } = req.body;
 
     const passwordUser = password || '123456';
-    if (!firstName || !lastName || !email) throw new Error('Missing input create user from admin');
-    const user = await NhanVien.findOne({ email });
-    if (user) {
-        throw new Error(`User with firstName ${firstName} and email ${email} has already existed`);
+
+    // Kiểm tra các trường bắt buộc
+    if (!firstName || !lastName || !email) {
+        throw new Error('Missing input: firstName, lastName, or email');
     }
 
-    if (!/^(09|03|07|08|05)\d{8}$/.test(req.body.phoneNumber)) {
-        return res
-            .status(400)
-            .json({ message: 'Số điện thoại phải có 10 chữ số và bắt đầu bằng 09, 03, 07, 08 hoặc 05.' });
-    }
-
+    // Kiểm tra xem người dùng hiện tại có phải admin hay không
     const currentUser = req.user;
-    if (currentUser.role === 'staff' && role !== 'user') {
-        return res.status(400).json({
+    if (currentUser.role !== 'admin') {
+        return res.status(403).json({
             success: false,
-            message: 'Nhân viên chỉ được tạo chức vụ người dùng',
-        });
-    }
-    if (currentUser.role === 'staff') {
-        role = 'user';
-    }
-    if (currentUser.role === 'admin' && role !== 'staff' && role !== 'user') {
-        return res.status(400).json({
-            success: false,
-            message: 'Chức vụ phải là nhân viên hoặc người dùng',
+            message: 'Chỉ quản trị viên (admin) mới có quyền tạo người dùng mới.',
         });
     }
 
+    // Kiểm tra xem email đã tồn tại hay chưa
+    const existingUser = await NhanVien.findOne({ email });
+    if (existingUser) {
+        return res.status(400).json({
+            success: false,
+            message: `Người dùng với email ${email} đã tồn tại.`,
+        });
+    }
+
+    // Kiểm tra định dạng số điện thoại
+    if (!/^(09|03|07|08|05)\d{8}$/.test(req.body.phoneNumber)) {
+        return res.status(400).json({
+            success: false,
+            message: 'Số điện thoại phải có 10 chữ số và bắt đầu bằng 09, 03, 07, 08 hoặc 05.',
+        });
+    }
+
+    // Đảm bảo chỉ cho phép role là 'staff' hoặc 'user'
+    if (role !== 'staff' && role !== 'user') {
+        return res.status(400).json({
+            success: false,
+            message: 'Vai trò chỉ được phép là nhân viên (staff) hoặc người dùng (user).',
+        });
+    }
+
+    // Tạo người dùng mới
     const newUser = await NhanVien.create({
         ...req.body,
         password: passwordUser,
-        // role: userRole, // Gán role đã xử lý vào người dùng mới
     });
 
+    // Phản hồi kết quả
     return res.status(200).json({
-        success: newUser ? true : false,
-        newUser: newUser ? newUser : 'Create user account from admin failed',
+        success: !!newUser,
+        newUser: newUser || 'Không thể tạo tài khoản người dùng mới.',
     });
 });
 
@@ -414,6 +425,8 @@ const lockedUser = asyncHandler(async (req, res) => {
             message: 'Không được khoá/mở khoá chính mình.',
         });
     }
+    console.log('currentUser: ', currentUser);
+    console.log('user: ', user);
     if (currentUser.role === user.role) {
         return res.status(403).json({
             success: false,

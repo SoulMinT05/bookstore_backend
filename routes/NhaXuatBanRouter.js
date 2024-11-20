@@ -8,7 +8,7 @@ const {
 } = require('../middlewares/verifyTokenMiddleware');
 
 router.post('/createPublisher', [verifyAccessToken, checkAdminOrStaff], NhaXuatBanController.createPublisher);
-router.get('/getAllPublishers', [verifyAccessToken], NhaXuatBanController.getAllPublishers);
+router.get('/getAllPublishers', NhaXuatBanController.getAllPublishers);
 router.put('/:publisherId', [verifyAccessToken, checkAdminOrStaff], NhaXuatBanController.updatePublisher);
 router.delete('/:publisherId', [verifyAccessToken, checkAdminOrStaff], NhaXuatBanController.deletePublisher);
 
