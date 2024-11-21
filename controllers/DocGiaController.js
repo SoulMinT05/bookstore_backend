@@ -8,7 +8,7 @@ const { generateAccessToken, generateRefreshToken } = require('../middlewares/jw
 const sendMail = require('../utils/sendMail');
 
 const register = asyncHandler(async (req, res, next) => {
-    const { email, password, Ho, Ten } = req.body;
+    const { email, password, Ho, Ten, DienThoai } = req.body;
     if (!email || !password || !Ho || !Ten) {
         return res.status(400).json({
             success: false,
@@ -23,7 +23,7 @@ const register = asyncHandler(async (req, res, next) => {
     if (!passwordRegex.test(password))
         throw new Error('Mật khẩu phải gồm kí tự in hoa, kí tự thường, số và kí tự đặc biệt');
 
-    if (!/^(09|03|07|08|05)\d{8}$/.test(DienThoai)) {
+    if (DienThoai && !/^(09|03|07|08|05)\d{8}$/.test(DienThoai)) {
         return res
             .status(400)
             .json({ message: 'Số điện thoại phải có 10 chữ số và bắt đầu bằng 09, 03, 07, 08 hoặc 05.' });

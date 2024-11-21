@@ -84,12 +84,12 @@ const createOrder = asyncHandler(async (req, res) => {
 const getAllOrders = asyncHandler(async (req, res) => {
     const orders = await Order.find()
         .populate({
-            path: 'MaDocGia', // Populate thông tin của MaDocGia
-            select: 'Ho Ten DiaChi email', // Chỉ lấy trường name của user
+            path: 'MaDocGia',
+            select: 'Ho Ten DiaChi email',
         })
         .populate({
-            path: 'MaSach.product', // Populate thông tin của từng sản phẩm trong mảng products
-            select: 'TenSach HinhAnhSach', // Lấy các trường name và HinhAnhSach của sản phẩm
+            path: 'MaSach.product',
+            select: 'TenSach HinhAnhSach',
         });
     return res.status(200).json({
         success: orders ? true : false,

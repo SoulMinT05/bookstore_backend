@@ -25,7 +25,7 @@ const getAllProducts = asyncHandler(async (req, res, next) => {
     }
 
     // Thực hiện truy vấn
-    let queryCommand = Sach.find(formattedQueries).populate('MaNXB', 'name'); // Populate để lấy TenSach của publisher
+    let queryCommand = Sach.find(formattedQueries).populate('MaNXB', 'TenNXB'); // Populate để lấy TenSach của publisher
     // Sắp xếp
     if (req.query.sort) {
         const sortBy = req.query.sort.split(',').join(' ');
@@ -54,7 +54,7 @@ const getAllProducts = asyncHandler(async (req, res, next) => {
                 products: response
                     ? response.map((product) => ({
                           ...product._doc,
-                          publisherName: product.MaNXB ? product.MaNXB.name : null,
+                          publisherName: product.MaNXB ? product.MaNXB.TenNXB : null,
                       }))
                     : 'Get products failed',
             });
@@ -74,7 +74,7 @@ const createProduct = asyncHandler(async (req, res, next) => {
         req.body.slug = slugify(req.body.TenSach);
     }
 
-    const publisher = await Publisher.findOne({ name: req.body.publisher });
+    const publisher = await Publisher.findOne({ TenNXB: req.body.publisher });
     console.log('publisher: ', publisher);
 
     if (!publisher) {
@@ -85,7 +85,7 @@ const createProduct = asyncHandler(async (req, res, next) => {
     if (images) req.body.HinhAnhSach = images;
 
     let newProduct = await Sach.create(req.body);
-    newProduct = await newProduct.populate('MaNXB', 'name');
+    newProduct = await newProduct.populate('MaNXB', 'TenNXB');
     console.log('newProduct: ', newProduct);
     console.log('images: ', images);
     return res.status(200).json({
@@ -98,7 +98,7 @@ const getDetailProduct = asyncHandler(async (req, res, next) => {
     // const { productId } = req.params;
     // const product = await Sach.findById(productId);
     const { slug } = req.params; // Lấy slug từ params
-    const product = await Sach.findOne({ slug: slug }).populate('MaNXB', 'name');
+    const product = await Sach.findOne({ slug: slug }).populate('MaNXB', 'TenNXB');
     return res.status(200).json({
         success: product ? true : false,
         product: product ? product : 'Get detail product failed',
@@ -130,7 +130,7 @@ const updateProduct = asyncHandler(async (req, res, next) => {
 
     if (req.body.publisherName) {
         // Tìm nhà xuất bản dựa vào tên
-        const publisher = await Publisher.findOne({ name: req.body.publisherName });
+        const publisher = await Publisher.findOne({ TenNXB: req.body.publisherName });
         console.log('publisher: ', publisher);
 
         if (!publisher) {
@@ -156,7 +156,7 @@ const updateProduct = asyncHandler(async (req, res, next) => {
         );
     }
     const product = await Sach.findByIdAndUpdate(productId, req.body, { new: true });
-    const populatedProduct = await product.populate('MaNXB', 'name');
+    const populatedProduct = await product.populate('MaNXB', 'TenNXB');
 
     console.log('populatedProduct: ', populatedProduct);
     return res.status(200).json({
@@ -250,7 +250,7 @@ const getProductsByPublisher = asyncHandler(async (req, res, next) => {
     const { MaNXB } = req.params;
 
     // Tìm các sản phẩm theo MaNXB và populate để lấy thông tin chi tiết của publisher
-    let products = await Sach.find({ MaNXB }).populate('MaNXB', 'name');
+    let products = await Sach.find({ MaNXB }).populate('MaNXB', 'TenNXB');
     products = products.filter((product) => product.MaNXB);
     return res.status(200).json({
         success: products.length > 0 ? true : false,

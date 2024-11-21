@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const PublisherSchema = new mongoose.Schema(
     {
-        name: {
+        TenNXB: {
             type: String,
             required: true,
             unique: true,
