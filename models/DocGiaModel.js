@@ -60,7 +60,7 @@ const UserSchema = new mongoose.Schema(
             {
                 product: {
                     type: mongoose.Schema.Types.ObjectId,
-                    ref: 'Product', // Tham chiếu đến collection 'Product'
+                    ref: 'Sach', // Tham chiếu đến collection 'Sach'
                 },
                 quantityCart: Number,
                 selected: {
@@ -72,7 +72,7 @@ const UserSchema = new mongoose.Schema(
         wishList: [
             {
                 type: mongoose.Types.ObjectId,
-                ref: 'Product',
+                ref: 'Sach',
             },
         ],
         isLocked: {

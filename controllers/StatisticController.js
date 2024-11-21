@@ -48,7 +48,7 @@ const getStatisticsByWeek = async (req, res) => {
             });
             const populateOrders = await Order.find({
                 createdAt: { $gte: currentStartOfWeek, $lt: currentEndOfWeek },
-            }).populate('orderBy');
+            }).populate('MaDocGia');
             const publisherCountCurrent = await Publisher.countDocuments({
                 createdAt: { $gte: currentStartOfWeek, $lt: currentEndOfWeek },
             });
@@ -129,7 +129,7 @@ const getStatisticsByMonth = async (req, res) => {
             });
             const populateOrders = await Order.find({
                 createdAt: { $gte: startOfMonth, $lt: endOfMonth },
-            }).populate('orderBy');
+            }).populate('MaDocGia');
 
             const publisherCountCurrent = await Publisher.countDocuments({
                 createdAt: { $gte: startOfMonth, $lt: endOfMonth },
@@ -193,8 +193,8 @@ const getStatisticsByYear = async (req, res) => {
             createdAt: { $gte: startOfLastYear, $lt: endOfLastYear },
         });
         const populateOrders = await Order.find({ createdAt: { $gte: startOfCurrentYear } })
-            .populate('orderBy') // Thay đổi đây tùy thuộc vào mối quan hệ của bạn
-            .populate('products.product'); // Nếu sản phẩm cũng cần được populate
+            .populate('MaDocGia') // Thay đổi đây tùy thuộc vào mối quan hệ của bạn
+            .populate('MaSach.product'); // Nếu sản phẩm cũng cần được populate
 
         const publisherCountCurrent = await Publisher.countDocuments({ createdAt: { $gte: startOfCurrentYear } });
         const publisherCountLast = await Publisher.countDocuments({
@@ -235,13 +235,13 @@ const getStatisticsByYear = async (req, res) => {
 
 const getUserStatisticsByDateRange = async (req, res) => {
     try {
-        const { startDate, endDate } = req.query;
+        const { NgayMuon, NgayTra } = req.query;
 
         // Chuyển đổi ngày từ chuỗi sang đối tượng Date
-        // Nếu không có startDate, sử dụng mặc định là 30 ngày trước
-        const start = startDate ? new Date(startDate) : new Date(new Date().setDate(new Date().getDate() - 30));
-        // Nếu không có endDate, sử dụng mặc định là ngày hiện tại
-        const end = endDate ? new Date(endDate) : new Date();
+        // Nếu không có NgayMuon, sử dụng mặc định là 30 ngày trước
+        const start = NgayMuon ? new Date(NgayMuon) : new Date(new Date().setDate(new Date().getDate() - 30));
+        // Nếu không có NgayTra, sử dụng mặc định là ngày hiện tại
+        const end = NgayTra ? new Date(NgayTra) : new Date();
 
         // Tổng số user trong khoảng thời gian
         const totalUsers = await User.countDocuments({
@@ -269,11 +269,11 @@ const getUserStatisticsByDateRange = async (req, res) => {
 };
 const getProductStatisticsByDateRange = async (req, res) => {
     try {
-        const { startDate, endDate } = req.query;
-        // Nếu không có startDate, sử dụng mặc định là 30 ngày trước
-        const start = startDate ? new Date(startDate) : new Date(new Date().setDate(new Date().getDate() - 30));
-        // Nếu không có endDate, sử dụng mặc định là ngày hiện tại
-        const end = endDate ? new Date(endDate) : new Date();
+        const { NgayMuon, NgayTra } = req.query;
+        // Nếu không có NgayMuon, sử dụng mặc định là 30 ngày trước
+        const start = NgayMuon ? new Date(NgayMuon) : new Date(new Date().setDate(new Date().getDate() - 30));
+        // Nếu không có NgayTra, sử dụng mặc định là ngày hiện tại
+        const end = NgayTra ? new Date(NgayTra) : new Date();
         // Tổng số sản phẩm trong khoảng thời gian
         const totalProducts = await Product.countDocuments({
             createdAt: { $gte: start, $lt: end },
@@ -298,11 +298,11 @@ const getProductStatisticsByDateRange = async (req, res) => {
 };
 const getOrderStatisticsByDateRange = async (req, res) => {
     try {
-        const { startDate, endDate } = req.query;
+        const { NgayMuon, NgayTra } = req.query;
 
         // Thiết lập thời gian mặc định nếu không có từ người dùng
-        const start = startDate ? new Date(startDate) : new Date(new Date().setDate(new Date().getDate() - 30));
-        const end = endDate ? new Date(endDate) : new Date();
+        const start = NgayMuon ? new Date(NgayMuon) : new Date(new Date().setDate(new Date().getDate() - 30));
+        const end = NgayTra ? new Date(NgayTra) : new Date();
 
         // Tổng số đơn hàng trong khoảng thời gian
         const totalOrders = await Order.countDocuments({
@@ -328,7 +328,7 @@ const getOrderStatisticsByDateRange = async (req, res) => {
         const newOrders = await Order.find({
             createdAt: { $gte: start, $lt: end },
         })
-            .populate('orderBy') // Thay 'customer' bằng trường bạn muốn populate
+            .populate('MaDocGia') // Thay 'customer' bằng trường bạn muốn populate
             .exec();
 
         return res.status(200).json({
@@ -344,11 +344,11 @@ const getOrderStatisticsByDateRange = async (req, res) => {
 
 const getPublisherStatisticsByDateRange = async (req, res) => {
     try {
-        const { startDate, endDate } = req.query;
-        // Nếu không có startDate, sử dụng mặc định là 30 ngày trước
-        const start = startDate ? new Date(startDate) : new Date(new Date().setDate(new Date().getDate() - 30));
-        // Nếu không có endDate, sử dụng mặc định là ngày hiện tại
-        const end = endDate ? new Date(endDate) : new Date();
+        const { NgayMuon, NgayTra } = req.query;
+        // Nếu không có NgayMuon, sử dụng mặc định là 30 ngày trước
+        const start = NgayMuon ? new Date(NgayMuon) : new Date(new Date().setDate(new Date().getDate() - 30));
+        // Nếu không có NgayTra, sử dụng mặc định là ngày hiện tại
+        const end = NgayTra ? new Date(NgayTra) : new Date();
 
         // Tổng số nhà xuất bản trong khoảng thời gian
         const totalPublishers = await Publisher.countDocuments({

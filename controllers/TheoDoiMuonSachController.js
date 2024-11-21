@@ -6,7 +6,7 @@ const asyncHandler = require('express-async-handler');
 const moment = require('moment-timezone');
 
 const createOrder = asyncHandler(async (req, res) => {
-    const { orderedProductIds, startDate } = req.body;
+    const { orderedProductIds, NgayMuon } = req.body;
     const currentUser = req.user._id;
 
     // Lấy thông tin người dùng từ database
@@ -30,19 +30,6 @@ const createOrder = asyncHandler(async (req, res) => {
         });
     }
 
-    // Xử lý ngày bắt đầu (startDate)
-    // let parsedStartDate = startDate
-    //     ? moment(startDate).tz('Asia/Ho_Chi_Minh', true).startOf('day').toDate()
-    //     : moment.tz('Asia/Ho_Chi_Minh').startOf('day').toDate();
-
-    // if (!parsedStartDate) {
-    //     return res.status(400).json({
-    //         success: false,
-    //         message: 'Ngày đặt hàng không hợp lệ.',
-    //     });
-    // }
-
-    // Lấy danh sách sản phẩm từ giỏ hàng
     const products = user.cart.map((item) => ({
         product: item.product,
         count: item.quantityCart,
@@ -64,11 +51,11 @@ const createOrder = asyncHandler(async (req, res) => {
 
     // Tạo đơn hàng mới
     const newOrder = await Order.create({
-        products: productsToOrder,
+        MaSach: productsToOrder,
         SoQuyen: totalQuantity,
-        orderBy: currentUser,
-        // startDate: parsedStartDate,
-        startDate,
+        MaDocGia: currentUser,
+        // NgayMuon: parsedNgayMuon,
+        NgayMuon,
     });
 
     // Lưu đơn hàng
@@ -97,11 +84,11 @@ const createOrder = asyncHandler(async (req, res) => {
 const getAllOrders = asyncHandler(async (req, res) => {
     const orders = await Order.find()
         .populate({
-            path: 'orderBy', // Populate thông tin của orderBy
+            path: 'MaDocGia', // Populate thông tin của MaDocGia
             select: 'Ho Ten DiaChi email', // Chỉ lấy trường name của user
         })
         .populate({
-            path: 'products.product', // Populate thông tin của từng sản phẩm trong mảng products
+            path: 'MaSach.product', // Populate thông tin của từng sản phẩm trong mảng products
             select: 'TenSach HinhAnhSach', // Lấy các trường name và HinhAnhSach của sản phẩm
         });
     return res.status(200).json({
@@ -114,11 +101,11 @@ const getOrderDetails = asyncHandler(async (req, res) => {
     const { orderId } = req.params;
     const orders = await Order.findById(orderId)
         .populate({
-            path: 'orderBy', // Populate thông tin của orderBy
+            path: 'MaDocGia', // Populate thông tin của MaDocGia
             select: 'Ho Ten DiaChi email', // Chỉ lấy trường name của user
         })
         .populate({
-            path: 'products.product', // Populate thông tin của từng sản phẩm trong mảng products
+            path: 'MaSach.product', // Populate thông tin của từng sản phẩm trong mảng products
             select: 'TenSach HinhAnhSach SoQuyen', // Lấy các trường name và HinhAnhSach của sản phẩm
         });
     return res.status(200).json({
@@ -129,7 +116,7 @@ const getOrderDetails = asyncHandler(async (req, res) => {
 
 const getUserOrderFromUser = asyncHandler(async (req, res) => {
     const { _id } = req.user;
-    const order = await Order.find({ orderBy: _id }).populate('products.product');
+    const order = await Order.find({ MaDocGia: _id }).populate('MaSach.product');
     return res.status(200).json({
         success: order ? true : false,
         order: order ? order : 'Get order user failed',
@@ -138,16 +125,16 @@ const getUserOrderFromUser = asyncHandler(async (req, res) => {
 
 const updateStatusOrder = asyncHandler(async (req, res) => {
     const { orderId } = req.params;
-    const { status } = req.body;
-    if (!status) throw new Error('Missing input status order');
+    const { TinhTrang } = req.body;
+    if (!TinhTrang) throw new Error('Missing input TinhTrang order');
 
     const cancelOrder = await Order.findById(orderId)
         .populate({
-            path: 'orderBy', // Populate thông tin người đặt hàng
+            path: 'MaDocGia', // Populate thông tin người đặt hàng
             select: 'Ho Ten DiaChi email', // Chỉ lấy các trường name và email
         })
         .populate({
-            path: 'products.product', // Populate thông tin sản phẩm trong đơn hàng
+            path: 'MaSach.product', // Populate thông tin sản phẩm trong đơn hàng
             select: 'TenSach HinhAnhSach SoQuyen', // Chỉ lấy các trường name, HinhAnhSach, và SoQuyen
         });
 
@@ -158,7 +145,7 @@ const updateStatusOrder = asyncHandler(async (req, res) => {
         });
     }
 
-    if (cancelOrder.status === 'cancel') {
+    if (cancelOrder.TinhTrang === 'cancel') {
         return res.status(400).json({
             success: false,
             message: 'Không thể thay đổi trạng thái vì đã huỷ đơn',
@@ -168,23 +155,23 @@ const updateStatusOrder = asyncHandler(async (req, res) => {
     const order = await Order.findByIdAndUpdate(
         orderId,
         {
-            status,
+            TinhTrang,
         },
         {
             new: true,
         },
     )
         .populate({
-            path: 'orderBy', // Populate lại thông tin người đặt hàng
+            path: 'MaDocGia', // Populate lại thông tin người đặt hàng
             select: 'Ho Ten DiaChi email',
         })
         .populate({
-            path: 'products.product', // Populate lại thông tin sản phẩm
+            path: 'MaSach.product', // Populate lại thông tin sản phẩm
             select: 'TenSach HinhAnhSach SoQuyen',
         });
     return res.status(200).json({
         success: order ? true : false,
-        order: order ? order : 'Update status order failed',
+        order: order ? order : 'Update TinhTrang order failed',
     });
 });
 
@@ -193,15 +180,15 @@ const cancelOrderFromUser = asyncHandler(async (req, res) => {
     if (!orderId) throw new Error('Order ID is invalid');
     const order = await Order.findById(orderId)
         .populate({
-            path: 'orderBy', // Populate thông tin của người đặt hàng
+            path: 'MaDocGia', // Populate thông tin của người đặt hàng
             select: 'Ho Ten DiaChi email', // Chỉ lấy các trường name và email
         })
         .populate({
-            path: 'products.product', // Populate thông tin sản phẩm trong đơn hàng
+            path: 'MaSach.product', // Populate thông tin sản phẩm trong đơn hàng
             select: 'TenSach HinhAnhSach SoQuyen', // Chỉ lấy các trường name, HinhAnhSach, và SoQuyen
         });
 
-    if (order.status !== 'pending') {
+    if (order.TinhTrang !== 'pending') {
         return res.status(400).json({
             success: false,
             message: 'Không thể huỷ bỏ đơn',
@@ -211,18 +198,18 @@ const cancelOrderFromUser = asyncHandler(async (req, res) => {
     const updatedOrder = await Order.findByIdAndUpdate(
         orderId,
         {
-            status: 'cancel',
+            TinhTrang: 'cancel',
         },
         {
             new: true,
         },
     )
         .populate({
-            path: 'orderBy', // Populate lại thông tin người đặt hàng
+            path: 'MaDocGia', // Populate lại thông tin người đặt hàng
             select: 'Ho Ten DiaChi email',
         })
         .populate({
-            path: 'products.product', // Populate lại thông tin sản phẩm
+            path: 'MaSach.product', // Populate lại thông tin sản phẩm
             select: 'TenSach HinhAnhSach SoQuyen',
         });
     return res.status(200).json({

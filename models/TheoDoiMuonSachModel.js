@@ -2,16 +2,16 @@ const mongoose = require('mongoose');
 
 const orderSchema = new mongoose.Schema(
     {
-        orderBy: {
+        MaDocGia: {
             type: mongoose.Types.ObjectId,
             ref: 'DocGia',
             // required: true,
         },
-        products: [
+        MaSach: [
             {
                 product: {
                     type: mongoose.Types.ObjectId,
-                    ref: 'Product',
+                    ref: 'Sach',
                 },
                 count: Number,
             },
@@ -24,19 +24,19 @@ const orderSchema = new mongoose.Schema(
             type: String,
             // required: true,
         },
-        startDate: {
+        NgayMuon: {
             type: Date,
             required: true,
             default: Date.now,
         },
-        endDate: {
+        NgayTra: {
             type: Date,
             required: true,
             default: function () {
-                return new Date(this.startDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+                return new Date(this.NgayMuon.getTime() + 30 * 24 * 60 * 60 * 1000);
             },
         },
-        status: {
+        TinhTrang: {
             type: String,
             enum: ['pending', 'approved', 'rejected', 'completed', 'cancel'],
             default: 'pending',
