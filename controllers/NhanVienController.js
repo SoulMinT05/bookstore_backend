@@ -8,8 +8,8 @@ const { generateAccessToken, generateRefreshToken } = require('../middlewares/jw
 const sendMail = require('../utils/sendMail');
 
 const register = asyncHandler(async (req, res, next) => {
-    const { email, password, firstName, lastName, phoneNumber } = req.body;
-    if (!email || !password || !firstName || !lastName) {
+    const { email, password, Ho, Ten, DienThoai } = req.body;
+    if (!email || !password || !Ho || !Ten) {
         return res.status(400).json({
             success: false,
             message: 'Missing input register',
@@ -23,7 +23,7 @@ const register = asyncHandler(async (req, res, next) => {
     if (!passwordRegex.test(password))
         throw new Error('Mật khẩu phải gồm kí tự in hoa, kí tự thường, số và kí tự đặc biệt');
 
-    if (!/^(09|03|07|08|05)\d{8}$/.test(phoneNumber)) {
+    if (!/^(09|03|07|08|05)\d{8}$/.test(DienThoai)) {
         return res
             .status(400)
             .json({ message: 'Số điện thoại phải có 10 chữ số và bắt đầu bằng 09, 03, 07, 08 hoặc 05.' });
@@ -55,9 +55,9 @@ const login = asyncHandler(async (req, res, next) => {
     if (user.isLocked) throw new Error(`Nguời dùng có email ${user.email} đã bị khoá`);
 
     if (user && (await user.isCorrectPassword(password))) {
-        const { password, isAdmin, role, refreshToken, ...userData } = user._doc;
+        const { password, isAdmin, ChucVu, refreshToken, ...userData } = user._doc;
         // Add accessToken, refreshToken
-        const accessToken = generateAccessToken(userData._id, isAdmin, role);
+        const accessToken = generateAccessToken(userData._id, isAdmin, ChucVu);
         const newRefreshToken = generateRefreshToken(userData._id);
         // Save refreshToken to DB
         await NhanVien.findByIdAndUpdate(userData._id, { refreshToken: newRefreshToken }, { new: true });
@@ -77,7 +77,7 @@ const login = asyncHandler(async (req, res, next) => {
             userData: {
                 ...userData,
                 isAdmin, // Adding isAdmin back to the userData
-                role, // Adding role back to the userData
+                ChucVu, // Adding ChucVu back to the userData
             },
         });
     } else {
@@ -104,7 +104,7 @@ const refreshCreateNewAccessToken = asyncHandler(async (req, res) => {
     const user = await NhanVien.findOne({ _id: isCheckRefreshToken._id, refreshToken: cookie.refreshToken });
     return res.status(200).json({
         success: user ? true : false,
-        newAccessToken: user ? generateAccessToken(user._id, user.isAdmin, user.role) : 'Refresh token not matched',
+        newAccessToken: user ? generateAccessToken(user._id, user.isAdmin, user.ChucVu) : 'Refresh token not matched',
     });
 });
 
@@ -233,7 +233,7 @@ const deleteUser = asyncHandler(async (req, res) => {
         throw new Error('User not found');
     }
     const currentUser = req.user; // Giả sử thông tin người dùng đang đăng nhập nằm trong req.user
-    if (currentUser.role !== 'admin') {
+    if (currentUser.ChucVu !== 'admin') {
         return res.status(403).json({
             success: false,
             message: 'Bạn không có quyền xoá người dùng',
@@ -247,7 +247,7 @@ const deleteUser = asyncHandler(async (req, res) => {
             message: 'User not found',
         });
     }
-    if (currentUser.role === 'admin' && deletedUser.role === 'admin') {
+    if (currentUser.ChucVu === 'admin' && deletedUser.ChucVu === 'admin') {
         return res.status(403).json({
             success: false,
             message: 'Bạn không có quyền xoá người cùng chức vụ',
@@ -266,7 +266,7 @@ const updateInfoFromUser = asyncHandler(async (req, res) => {
     if (!_id || Object.keys(req.body).length === 0) {
         throw new Error('Miss input');
     }
-    if (!/^(09|03|07|08|05)\d{8}$/.test(req.body.phoneNumber)) {
+    if (!/^(09|03|07|08|05)\d{8}$/.test(req.body.DienThoai)) {
         return res
             .status(400)
             .json({ message: 'Số điện thoại phải có 10 chữ số và bắt đầu bằng 09, 03, 07, 08 hoặc 05.' });
@@ -286,7 +286,7 @@ const updateInfoFromAdmin = asyncHandler(async (req, res) => {
         req.body.password = await bcrypt.hash(req.body.password, salt);
     }
 
-    if (!/^(09|03|07|08|05)\d{8}$/.test(req.body.phoneNumber)) {
+    if (!/^(09|03|07|08|05)\d{8}$/.test(req.body.DienThoai)) {
         return res
             .status(400)
             .json({ message: 'Số điện thoại phải có 10 chữ số và bắt đầu bằng 09, 03, 07, 08 hoặc 05.' });
@@ -301,28 +301,28 @@ const updateInfoFromAdmin = asyncHandler(async (req, res) => {
         });
     }
 
-    if (updatedUser.role === currentUser.role) {
+    if (updatedUser.ChucVu === currentUser.ChucVu) {
         return res.status(403).json({
             success: false,
             message: 'Không được sửa thông tin người cùng chức vụ',
         });
     }
 
-    if (currentUser.role === 'staff' && req.body.role !== 'user') {
+    if (currentUser.ChucVu === 'staff' && req.body.ChucVu !== 'user') {
         return res.status(403).json({
             success: false,
             message: 'Nhân viên không được phép thay đổi vai trò của người khác',
         });
     }
 
-    if (currentUser.role === 'staff' && updatedUser.role === 'admin') {
+    if (currentUser.ChucVu === 'staff' && updatedUser.ChucVu === 'admin') {
         return res.status(403).json({
             success: false,
             message: 'Nhân viên không được sửa thông tin quản lý',
         });
     }
 
-    if (currentUser.role === 'admin' && req.body.role && !['user', 'staff'].includes(req.body.role)) {
+    if (currentUser.ChucVu === 'admin' && req.body.ChucVu && !['user', 'staff'].includes(req.body.ChucVu)) {
         return res.status(403).json({
             success: false,
             message: 'Quản lý chỉ có thể thay đổi vai trò thành user hoặc staff',
@@ -337,18 +337,18 @@ const updateInfoFromAdmin = asyncHandler(async (req, res) => {
 });
 
 const createUserFromAdmin = asyncHandler(async (req, res) => {
-    const { firstName, lastName, email, password, role = 'staff' } = req.body;
+    const { Ho, Ten, email, password, ChucVu = 'staff' } = req.body;
 
     const passwordUser = password || '123456';
 
     // Kiểm tra các trường bắt buộc
-    if (!firstName || !lastName || !email) {
-        throw new Error('Missing input: firstName, lastName, or email');
+    if (!Ho || !Ten || !email) {
+        throw new Error('Missing input: Ho, Ten, or email');
     }
 
     // Kiểm tra xem người dùng hiện tại có phải admin hay không
     const currentUser = req.user;
-    if (currentUser.role !== 'admin') {
+    if (currentUser.ChucVu !== 'admin') {
         return res.status(403).json({
             success: false,
             message: 'Chỉ quản trị viên (admin) mới có quyền tạo người dùng mới.',
@@ -365,15 +365,15 @@ const createUserFromAdmin = asyncHandler(async (req, res) => {
     }
 
     // Kiểm tra định dạng số điện thoại
-    if (!/^(09|03|07|08|05)\d{8}$/.test(req.body.phoneNumber)) {
+    if (!/^(09|03|07|08|05)\d{8}$/.test(req.body.DienThoai)) {
         return res.status(400).json({
             success: false,
             message: 'Số điện thoại phải có 10 chữ số và bắt đầu bằng 09, 03, 07, 08 hoặc 05.',
         });
     }
 
-    // Đảm bảo chỉ cho phép role là 'staff' hoặc 'user'
-    if (role !== 'staff' && role !== 'user') {
+    // Đảm bảo chỉ cho phép ChucVu là 'staff' hoặc 'user'
+    if (ChucVu !== 'staff' && ChucVu !== 'user') {
         return res.status(400).json({
             success: false,
             message: 'Vai trò chỉ được phép là nhân viên (staff) hoặc người dùng (user).',
@@ -395,19 +395,18 @@ const createUserFromAdmin = asyncHandler(async (req, res) => {
 
 const updateAddressUser = asyncHandler(async (req, res) => {
     const { _id } = req.user;
-    if (!req.body.address) throw new Error('Miss input address');
+    if (!req.body.DiaChi) throw new Error('Miss input DiaChi');
     const user = await NhanVien.findByIdAndUpdate(
         _id,
         {
-            // $push: { address: req.body.address },
-            address: req.body.address,
+            DiaChi: req.body.DiaChi,
         },
         { new: true },
     ).select('-password -refreshToken');
 
     return res.status(200).json({
         success: user ? true : false,
-        message: user ? user : 'Updated address user failed',
+        message: user ? user : 'Updated DiaChi user failed',
     });
 });
 
@@ -427,14 +426,14 @@ const lockedUser = asyncHandler(async (req, res) => {
     }
     console.log('currentUser: ', currentUser);
     console.log('user: ', user);
-    if (currentUser.role === user.role) {
+    if (currentUser.ChucVu === user.ChucVu) {
         return res.status(403).json({
             success: false,
             message: 'Không được khoá/mở khoá người cùng chức vụ.',
         });
     }
 
-    if (currentUser.role === 'staff' && user.role === 'admin') {
+    if (currentUser.ChucVu === 'staff' && user.ChucVu === 'admin') {
         return res.status(403).json({
             success: false,
             message: 'Nhân viên không được khoá/mở khoá quản lý.',

@@ -4,18 +4,18 @@ const crypto = require('crypto');
 
 const StaffSchema = new mongoose.Schema(
     {
-        firstName: {
+        Ho: {
             type: String,
             required: true,
         },
-        lastName: {
+        Ten: {
             type: String,
             required: true,
         },
-        birthday: {
+        NgaySinh: {
             type: Date,
         },
-        gender: {
+        Phai: {
             type: String,
             enum: {
                 values: ['male', 'female', 'other', 'unknown'],
@@ -23,11 +23,7 @@ const StaffSchema = new mongoose.Schema(
             },
             // required: true,
         },
-        // address: {
-        //     type: Array,
-        //     default: [],
-        // },
-        address: {
+        DiaChi: {
             type: String,
             // required: true,
         },
@@ -36,19 +32,14 @@ const StaffSchema = new mongoose.Schema(
             unique: true,
             required: true,
         },
-        phoneNumber: {
+        DienThoai: {
             type: String,
-            // validate: {
-            //     validator: (phoneNumber) => phoneNumber.length > 9,
-            //     massage: 'Phone number is incorrect format'
-            // },
-            // required: true,
         },
         isAdmin: {
             type: Boolean,
             default: false,
         },
-        role: {
+        ChucVu: {
             type: String,
             default: 'staff',
         },

@@ -11,11 +11,11 @@ const createOrder = asyncHandler(async (req, res) => {
 
     // Lấy thông tin người dùng từ database
     const user = await DocGia.findById(currentUser)
-        .select('firstName lastName email address cart')
+        .select('Ho Ten email DiaChi cart')
         .populate('cart.product', 'HinhAnhSach TenSach DonGia');
 
     // Kiểm tra nếu người dùng chưa có thông tin cá nhân cần thiết
-    if (!user.firstName || !user.lastName || !user.email || !user.address) {
+    if (!user.Ho || !user.Ten || !user.email || !user.DiaChi) {
         return res.status(400).json({
             success: false,
             message: 'Vui lòng nhập đầy đủ thông tin cá nhân trước khi đặt hàng.',
@@ -98,7 +98,7 @@ const getAllOrders = asyncHandler(async (req, res) => {
     const orders = await Order.find()
         .populate({
             path: 'orderBy', // Populate thông tin của orderBy
-            select: 'firstName lastName address email', // Chỉ lấy trường name của user
+            select: 'Ho Ten DiaChi email', // Chỉ lấy trường name của user
         })
         .populate({
             path: 'products.product', // Populate thông tin của từng sản phẩm trong mảng products
@@ -115,7 +115,7 @@ const getOrderDetails = asyncHandler(async (req, res) => {
     const orders = await Order.findById(orderId)
         .populate({
             path: 'orderBy', // Populate thông tin của orderBy
-            select: 'firstName lastName address email', // Chỉ lấy trường name của user
+            select: 'Ho Ten DiaChi email', // Chỉ lấy trường name của user
         })
         .populate({
             path: 'products.product', // Populate thông tin của từng sản phẩm trong mảng products
@@ -144,7 +144,7 @@ const updateStatusOrder = asyncHandler(async (req, res) => {
     const cancelOrder = await Order.findById(orderId)
         .populate({
             path: 'orderBy', // Populate thông tin người đặt hàng
-            select: 'firstName lastName address email', // Chỉ lấy các trường name và email
+            select: 'Ho Ten DiaChi email', // Chỉ lấy các trường name và email
         })
         .populate({
             path: 'products.product', // Populate thông tin sản phẩm trong đơn hàng
@@ -176,7 +176,7 @@ const updateStatusOrder = asyncHandler(async (req, res) => {
     )
         .populate({
             path: 'orderBy', // Populate lại thông tin người đặt hàng
-            select: 'firstName lastName address email',
+            select: 'Ho Ten DiaChi email',
         })
         .populate({
             path: 'products.product', // Populate lại thông tin sản phẩm
@@ -194,7 +194,7 @@ const cancelOrderFromUser = asyncHandler(async (req, res) => {
     const order = await Order.findById(orderId)
         .populate({
             path: 'orderBy', // Populate thông tin của người đặt hàng
-            select: 'firstName lastName address email', // Chỉ lấy các trường name và email
+            select: 'Ho Ten DiaChi email', // Chỉ lấy các trường name và email
         })
         .populate({
             path: 'products.product', // Populate thông tin sản phẩm trong đơn hàng
@@ -219,7 +219,7 @@ const cancelOrderFromUser = asyncHandler(async (req, res) => {
     )
         .populate({
             path: 'orderBy', // Populate lại thông tin người đặt hàng
-            select: 'firstName lastName address email',
+            select: 'Ho Ten DiaChi email',
         })
         .populate({
             path: 'products.product', // Populate lại thông tin sản phẩm

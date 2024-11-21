@@ -7,7 +7,7 @@ const PublisherSchema = new mongoose.Schema(
             required: true,
             unique: true,
         },
-        address: {
+        DiaChi: {
             type: String,
             required: true,
         },

@@ -141,7 +141,7 @@ const dislikeBlog = asyncHandler(async (req, res) => {
     }
 });
 
-const excludedFields = 'firstName lastName email createdAt updatedAt';
+const excludedFields = 'Ho Ten email createdAt updatedAt';
 const getDetailBlog = asyncHandler(async (req, res) => {
     const { blogId } = req.params;
     const blog = await Blog.findByIdAndUpdate(

@@ -25,31 +25,31 @@ const verifyAccessToken = asyncHandler(async (req, res, next) => {
 });
 
 const checkIsStaff = asyncHandler(async (req, res, next) => {
-    const { isAdmin, role } = req.user;
-    if (role !== 'staff') {
+    const { isAdmin, ChucVu } = req.user;
+    if (ChucVu !== 'staff') {
         res.status(401).json({
             success: false,
-            message: 'Require admin role',
+            message: 'Require admin ChucVu',
         });
     }
     next();
 });
 
 const checkIsAdmin = asyncHandler(async (req, res, next) => {
-    const { isAdmin, role } = req.user;
-    if (isAdmin === false && role !== 'admin') {
+    const { isAdmin, ChucVu } = req.user;
+    if (isAdmin === false && ChucVu !== 'admin') {
         res.status(401).json({
             success: false,
-            message: 'Require admin role',
+            message: 'Require admin ChucVu',
         });
     }
-    if (isAdmin === true || role === 'admin') next();
+    if (isAdmin === true || ChucVu === 'admin') next();
 });
 
 const checkAdminOrStaff = (req, res, next) => {
-    const { role } = req.user;
+    const { ChucVu } = req.user;
 
-    if (role === 'admin' || role === 'staff') {
+    if (ChucVu === 'admin' || ChucVu === 'staff') {
         next();
     } else {
         // Nếu không phải, trả về thông báo truy cập bị từ chối

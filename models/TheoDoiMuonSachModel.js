@@ -20,7 +20,7 @@ const orderSchema = new mongoose.Schema(
         //     type: mongoose.Types.ObjectId,
         //     ref: 'Coupon',
         // },
-        address: {
+        DiaChi: {
             type: String,
             // required: true,
         },
