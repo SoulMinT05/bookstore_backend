@@ -41,7 +41,7 @@ const orderSchema = new mongoose.Schema(
             enum: ['pending', 'approved', 'rejected', 'completed', 'cancel'],
             default: 'pending',
         },
-        quantity: {
+        SoQuyen: {
             type: Number,
             // required: true,
         },

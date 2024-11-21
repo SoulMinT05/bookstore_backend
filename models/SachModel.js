@@ -4,25 +4,25 @@ const crypto = require('crypto');
 
 const ProductSchema = new mongoose.Schema(
     {
-        name: {
+        TenSach: {
             type: String,
             required: true,
             trim: true,
         },
-        author: {
+        TacGia: {
             type: String,
             required: true,
         },
-        price: {
+        DonGia: {
             type: Number,
             required: true,
         },
-        quantity: {
+        SoQuyen: {
             type: Number,
             default: 0,
             required: true,
         },
-        yearOfPublication: {
+        NamXuatBan: {
             type: String,
             required: false,
         },
@@ -31,13 +31,13 @@ const ProductSchema = new mongoose.Schema(
         //     type: String,
         //     required: true,
         // },
-        publisherId: {
+        MaNXB: {
             type: mongoose.Types.ObjectId,
             ref: 'NhaXuatBan',
             // required: true,
         },
         // add further than
-        images: { type: [String], default: [] },
+        HinhAnhSach: { type: [String], default: [] },
         description: {
             type: String,
             // required: true,

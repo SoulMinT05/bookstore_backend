@@ -5,99 +5,6 @@ const DocGia = require('../models/DocGiaModel');
 const asyncHandler = require('express-async-handler');
 const moment = require('moment-timezone');
 
-// const createOrder = asyncHandler(async (req, res) => {
-//     const currentUser = req.user._id;
-//     const { orderedProductIds } = req.body;
-//     let { startDate } = req.body;
-
-//     if (!startDate) {
-//         startDate = moment.tz('Asia/Ho_Chi_Minh').startOf('day').toDate();
-//         console.log('startDate: ', startDate);
-
-//         // return res.status(400).json({
-//         //     success: false,
-//         //     message: 'Phải nhập ngày mượn sách',
-//         // });
-//     }
-
-//     // let parsedStartDate = new Date(startDate);
-//     let parsedStartDate = moment.tz(startDate, 'YYYY-MM-DD', 'Asia/Ho_Chi_Minh').startOf('day').toDate();
-//     console.log('parsedStartDate: ', parsedStartDate);
-//     if (!parsedStartDate) {
-//         // Nếu startDate không hợp lệ (ví dụ không phải là ngày hợp lệ), trả về lỗi
-//         return res.status(400).json({
-//             success: false,
-//             message: 'Invalid start date format.',
-//         });
-//     }
-
-//     // Đảm bảo thời gian của startDate là 00:00:00
-//     // parsedStartDate.setHours(0, 0, 0, 0);
-
-//     const userCart = await NhanVien.findById(currentUser).select('cart').populate('cart.product', 'images name price'); // --> product
-//     // cart: [
-//     //     {
-//     //       product: [Object],
-//     //       quantityCart: 18,
-//     //       currentUser: new ObjectId('66c98f4e3332ec89d8296591')
-//     //     }
-//     //   ]
-
-//     if (!userCart || userCart.cart.length === 0) {
-//         return res.status(400).json({
-//             success: false,
-//             message: 'Cần có sản phẩm trong giỏ hàng.',
-//         });
-//     }
-
-//     const products = userCart?.cart?.map((item) => ({
-//         product: item.product,
-//         count: item.quantityCart,
-//     }));
-
-//     // Lọc ra những sản phẩm được đặt hàng từ giỏ hàng
-//     const productsToOrder = products.filter((item) => orderedProductIds.includes(item.product.toString()));
-//     console.log('productsToOrder: ', productsToOrder);
-//     // if (productsToOrder.length === 0) {
-//     //     return res.status(400).json({
-//     //         success: false,
-//     //         message: 'Chưa có sản phẩm nào trong giỏ.',
-//     //     });
-//     // }
-
-//     // Tính tổng số lượng của các sản phẩm được đặt hàng
-//     const totalQuantity = productsToOrder.reduce((acc, current) => acc + current.count, 0);
-
-//     // Tạo đơn hàng mới
-//     const newOrder = await Order.create({
-//         products: productsToOrder,
-//         quantity: totalQuantity,
-//         orderBy: currentUser,
-//         startDate: parsedStartDate,
-//     });
-//     await newOrder.save();
-//     console.log('newOrder: ', newOrder);
-
-//     // Xóa các sản phẩm đã được order khỏi giỏ hàng của user
-//     const updatedCart = userCart.cart.filter((item) => !orderedProductIds.includes(item.product.toString()));
-//     await NhanVien.findByIdAndUpdate(currentUser, { cart: updatedCart });
-
-//     // Trừ số lượng sản phẩm đã order trong ProductModel
-//     const bulkOperations = productsToOrder.map((item) => ({
-//         updateOne: {
-//             filter: { _id: item.product },
-//             update: { $inc: { quantity: -item.count } }, // Trừ đi số lượng
-//         },
-//     }));
-//     await Product.bulkWrite(bulkOperations);
-
-//     return res.status(200).json({
-//         success: newOrder ? true : false,
-//         message: 'Mượn sách thành công',
-//         newOrder,
-//     });
-// });
-
 const createOrder = asyncHandler(async (req, res) => {
     const { orderedProductIds, startDate } = req.body;
     const currentUser = req.user._id;
@@ -105,7 +12,7 @@ const createOrder = asyncHandler(async (req, res) => {
     // Lấy thông tin người dùng từ database
     const user = await DocGia.findById(currentUser)
         .select('firstName lastName email address cart')
-        .populate('cart.product', 'images name price');
+        .populate('cart.product', 'HinhAnhSach TenSach DonGia');
 
     // Kiểm tra nếu người dùng chưa có thông tin cá nhân cần thiết
     if (!user.firstName || !user.lastName || !user.email || !user.address) {
@@ -158,7 +65,7 @@ const createOrder = asyncHandler(async (req, res) => {
     // Tạo đơn hàng mới
     const newOrder = await Order.create({
         products: productsToOrder,
-        quantity: totalQuantity,
+        SoQuyen: totalQuantity,
         orderBy: currentUser,
         // startDate: parsedStartDate,
         startDate,
@@ -175,7 +82,7 @@ const createOrder = asyncHandler(async (req, res) => {
     const bulkOperations = productsToOrder.map((item) => ({
         updateOne: {
             filter: { _id: item.product },
-            update: { $inc: { quantity: -item.count } },
+            update: { $inc: { SoQuyen: -item.count } },
         },
     }));
     await Product.bulkWrite(bulkOperations);
@@ -195,7 +102,7 @@ const getAllOrders = asyncHandler(async (req, res) => {
         })
         .populate({
             path: 'products.product', // Populate thông tin của từng sản phẩm trong mảng products
-            select: 'name images', // Lấy các trường name và images của sản phẩm
+            select: 'TenSach HinhAnhSach', // Lấy các trường name và HinhAnhSach của sản phẩm
         });
     return res.status(200).json({
         success: orders ? true : false,
@@ -212,7 +119,7 @@ const getOrderDetails = asyncHandler(async (req, res) => {
         })
         .populate({
             path: 'products.product', // Populate thông tin của từng sản phẩm trong mảng products
-            select: 'name images quantity', // Lấy các trường name và images của sản phẩm
+            select: 'TenSach HinhAnhSach SoQuyen', // Lấy các trường name và HinhAnhSach của sản phẩm
         });
     return res.status(200).json({
         success: orders ? true : false,
@@ -241,7 +148,7 @@ const updateStatusOrder = asyncHandler(async (req, res) => {
         })
         .populate({
             path: 'products.product', // Populate thông tin sản phẩm trong đơn hàng
-            select: 'name images quantity', // Chỉ lấy các trường name, images, và quantity
+            select: 'TenSach HinhAnhSach SoQuyen', // Chỉ lấy các trường name, HinhAnhSach, và SoQuyen
         });
 
     if (!cancelOrder) {
@@ -273,7 +180,7 @@ const updateStatusOrder = asyncHandler(async (req, res) => {
         })
         .populate({
             path: 'products.product', // Populate lại thông tin sản phẩm
-            select: 'name images quantity',
+            select: 'TenSach HinhAnhSach SoQuyen',
         });
     return res.status(200).json({
         success: order ? true : false,
@@ -291,7 +198,7 @@ const cancelOrderFromUser = asyncHandler(async (req, res) => {
         })
         .populate({
             path: 'products.product', // Populate thông tin sản phẩm trong đơn hàng
-            select: 'name images quantity', // Chỉ lấy các trường name, images, và quantity
+            select: 'TenSach HinhAnhSach SoQuyen', // Chỉ lấy các trường name, HinhAnhSach, và SoQuyen
         });
 
     if (order.status !== 'pending') {
@@ -316,7 +223,7 @@ const cancelOrderFromUser = asyncHandler(async (req, res) => {
         })
         .populate({
             path: 'products.product', // Populate lại thông tin sản phẩm
-            select: 'name images quantity',
+            select: 'TenSach HinhAnhSach SoQuyen',
         });
     return res.status(200).json({
         success: updatedOrder ? true : false,

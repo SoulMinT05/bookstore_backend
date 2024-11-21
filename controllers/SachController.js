@@ -17,15 +17,15 @@ const getAllProducts = asyncHandler(async (req, res, next) => {
     const formattedQueries = JSON.parse(queryString);
 
     // Tìm kiếm theo tên sản phẩm (không phân biệt chữ hoa và chữ thường)
-    if (queriesObj?.name) {
-        formattedQueries.name = {
-            $regex: queriesObj.name,
+    if (queriesObj?.TenSach) {
+        formattedQueries.TenSach = {
+            $regex: queriesObj.TenSach,
             $options: 'i', // Không phân biệt chữ hoa và chữ thường
         };
     }
 
     // Thực hiện truy vấn
-    let queryCommand = Sach.find(formattedQueries).populate('publisherId', 'name'); // Populate để lấy name của publisher
+    let queryCommand = Sach.find(formattedQueries).populate('MaNXB', 'name'); // Populate để lấy TenSach của publisher
     // Sắp xếp
     if (req.query.sort) {
         const sortBy = req.query.sort.split(',').join(' ');
@@ -54,7 +54,7 @@ const getAllProducts = asyncHandler(async (req, res, next) => {
                 products: response
                     ? response.map((product) => ({
                           ...product._doc,
-                          publisherName: product.publisherId ? product.publisherId.name : null,
+                          publisherName: product.MaNXB ? product.MaNXB.name : null,
                       }))
                     : 'Get products failed',
             });
@@ -70,8 +70,8 @@ const getAllProducts = asyncHandler(async (req, res, next) => {
 const createProduct = asyncHandler(async (req, res, next) => {
     if (Object.keys(req.body).length === 0) throw new Error('Missing input');
     const images = req.files?.map((element) => element.path);
-    if (req.body && req.body.name) {
-        req.body.slug = slugify(req.body.name);
+    if (req.body && req.body.TenSach) {
+        req.body.slug = slugify(req.body.TenSach);
     }
 
     const publisher = await Publisher.findOne({ name: req.body.publisher });
@@ -80,12 +80,12 @@ const createProduct = asyncHandler(async (req, res, next) => {
     if (!publisher) {
         throw new Error('Publisher not found');
     }
-    req.body.publisherId = publisher._id;
+    req.body.MaNXB = publisher._id;
 
-    if (images) req.body.images = images;
+    if (images) req.body.HinhAnhSach = images;
 
     let newProduct = await Sach.create(req.body);
-    newProduct = await newProduct.populate('publisherId', 'name');
+    newProduct = await newProduct.populate('MaNXB', 'name');
     console.log('newProduct: ', newProduct);
     console.log('images: ', images);
     return res.status(200).json({
@@ -98,7 +98,7 @@ const getDetailProduct = asyncHandler(async (req, res, next) => {
     // const { productId } = req.params;
     // const product = await Sach.findById(productId);
     const { slug } = req.params; // Lấy slug từ params
-    const product = await Sach.findOne({ slug: slug }).populate('publisherId', 'name');
+    const product = await Sach.findOne({ slug: slug }).populate('MaNXB', 'name');
     return res.status(200).json({
         success: product ? true : false,
         product: product ? product : 'Get detail product failed',
@@ -106,11 +106,11 @@ const getDetailProduct = asyncHandler(async (req, res, next) => {
 });
 
 const getProductSimilarPublisher = async (req, res, next) => {
-    const { publisherId } = req.query;
+    const { MaNXB } = req.query;
     try {
         const relatedProducts = await Sach.find({
-            publisherId,
-            _id: { $ne: publisherId }, // Loại trừ sản phẩm hiện tại
+            MaNXB,
+            _id: { $ne: MaNXB }, // Loại trừ sản phẩm hiện tại
         }).limit(6); // Giới hạn số sản phẩm trả về (tùy nhu cầu)
         return res.status(200).json({
             success: relatedProducts ? true : false,
@@ -124,8 +124,8 @@ const getProductSimilarPublisher = async (req, res, next) => {
 const updateProduct = asyncHandler(async (req, res, next) => {
     const { productId } = req.params;
 
-    if (req.body && req.body.name) {
-        req.body.slug = slugify(req.body.name);
+    if (req.body && req.body.TenSach) {
+        req.body.slug = slugify(req.body.TenSach);
     }
 
     if (req.body.publisherName) {
@@ -136,15 +136,15 @@ const updateProduct = asyncHandler(async (req, res, next) => {
         if (!publisher) {
             throw new Error('Publisher not found');
         }
-        // Gán publisherId vào req.body
-        req.body.publisherId = publisher._id;
+        // Gán MaNXB vào req.body
+        req.body.MaNXB = publisher._id;
     }
     // Delete image
     const deleteImages = req.body.deleteImage ? JSON.parse(req.body.deleteImage) : [];
     if (deleteImages.length > 0) {
         await Sach.updateOne(
             { _id: productId },
-            { $pull: { images: { $in: deleteImages } } }, // Xóa tất cả hình ảnh trong mảng deleteImages
+            { $pull: { HinhAnhSach: { $in: deleteImages } } }, // Xóa tất cả hình ảnh trong mảng deleteImages
         );
     }
     // Add new image
@@ -152,11 +152,11 @@ const updateProduct = asyncHandler(async (req, res, next) => {
     if (newImages && newImages.length > 0) {
         await Sach.updateOne(
             { _id: productId },
-            { $push: { images: { $each: newImages } } }, // Sử dụng $push để thêm nhiều hình ảnh
+            { $push: { HinhAnhSach: { $each: newImages } } }, // Sử dụng $push để thêm nhiều hình ảnh
         );
     }
     const product = await Sach.findByIdAndUpdate(productId, req.body, { new: true });
-    const populatedProduct = await product.populate('publisherId', 'name');
+    const populatedProduct = await product.populate('MaNXB', 'name');
 
     console.log('populatedProduct: ', populatedProduct);
     return res.status(200).json({
@@ -231,7 +231,7 @@ const uploadImagesProduct = asyncHandler(async (req, res) => {
         productId,
         {
             $push: {
-                images: {
+                HinhAnhSach: {
                     $each: req.files.map((item) => item.path),
                 },
             },
@@ -247,11 +247,11 @@ const uploadImagesProduct = asyncHandler(async (req, res) => {
 });
 
 const getProductsByPublisher = asyncHandler(async (req, res, next) => {
-    const { publisherId } = req.params;
+    const { MaNXB } = req.params;
 
-    // Tìm các sản phẩm theo publisherId và populate để lấy thông tin chi tiết của publisher
-    let products = await Sach.find({ publisherId }).populate('publisherId', 'name');
-    products = products.filter((product) => product.publisherId);
+    // Tìm các sản phẩm theo MaNXB và populate để lấy thông tin chi tiết của publisher
+    let products = await Sach.find({ MaNXB }).populate('MaNXB', 'name');
+    products = products.filter((product) => product.MaNXB);
     return res.status(200).json({
         success: products.length > 0 ? true : false,
         products: products,

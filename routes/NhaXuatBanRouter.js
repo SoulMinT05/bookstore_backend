@@ -9,7 +9,7 @@ const {
 
 router.post('/createPublisher', [verifyAccessToken, checkAdminOrStaff], NhaXuatBanController.createPublisher);
 router.get('/getAllPublishers', NhaXuatBanController.getAllPublishers);
-router.put('/:publisherId', [verifyAccessToken, checkAdminOrStaff], NhaXuatBanController.updatePublisher);
-router.delete('/:publisherId', [verifyAccessToken, checkAdminOrStaff], NhaXuatBanController.deletePublisher);
+router.put('/:MaNXB', [verifyAccessToken, checkAdminOrStaff], NhaXuatBanController.updatePublisher);
+router.delete('/:MaNXB', [verifyAccessToken, checkAdminOrStaff], NhaXuatBanController.deletePublisher);
 
 module.exports = router;

@@ -19,8 +19,8 @@ const getAllBlogPublishers = asyncHandler(async (req, res) => {
 });
 
 const updateBlogPublisher = asyncHandler(async (req, res) => {
-    const { blogPublisherId } = req.params;
-    const blogPublisher = await BlogPublisher.findByIdAndUpdate(blogPublisherId, req.body, {
+    const { blogMaNXB } = req.params;
+    const blogPublisher = await BlogPublisher.findByIdAndUpdate(blogMaNXB, req.body, {
         new: true,
     });
     return res.status(200).json({
@@ -30,8 +30,8 @@ const updateBlogPublisher = asyncHandler(async (req, res) => {
 });
 
 const deleteBlogPublisher = asyncHandler(async (req, res) => {
-    const { blogPublisherId } = req.params;
-    const blogPublisher = await BlogPublisher.findByIdAndDelete(blogPublisherId);
+    const { blogMaNXB } = req.params;
+    const blogPublisher = await BlogPublisher.findByIdAndDelete(blogMaNXB);
     console.log('blogPublisher: ', blogPublisher);
     return res.status(200).json({
         success: blogPublisher ? true : false,

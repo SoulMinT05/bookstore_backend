@@ -4,7 +4,7 @@ const { verifyAccessToken, checkIsStaff, checkIsAdmin } = require('../middleware
 
 router.post('/createBlogPublisher', [verifyAccessToken, checkIsAdmin], BlogNhaXuatBanController.createBlogPublisher);
 router.get('/getAllBlogPublishers', BlogNhaXuatBanController.getAllBlogPublishers);
-router.put('/:blogPublisherId', [verifyAccessToken, checkIsAdmin], BlogNhaXuatBanController.updateBlogPublisher);
-router.delete('/:blogPublisherId', [verifyAccessToken, checkIsAdmin], BlogNhaXuatBanController.deleteBlogPublisher);
+router.put('/:blogMaNXB', [verifyAccessToken, checkIsAdmin], BlogNhaXuatBanController.updateBlogPublisher);
+router.delete('/:blogMaNXB', [verifyAccessToken, checkIsAdmin], BlogNhaXuatBanController.deleteBlogPublisher);
 
 module.exports = router;

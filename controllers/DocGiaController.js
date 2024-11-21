@@ -532,7 +532,7 @@ const getCart = asyncHandler(async (req, res) => {
 
     const user = await DocGia.findById(_id).populate({
         path: 'cart.product', // Populate trường product trong giỏ hàng
-        select: 'name price images', // Chọn các trường cần thiết từ Product (có thể thay đổi tùy vào nhu cầu)
+        select: 'TenSach DonGia HinhAnhSach', // Chọn các trường cần thiết từ Product (có thể thay đổi tùy vào nhu cầu)
     });
     if (!user) throw new Error('User not found');
 

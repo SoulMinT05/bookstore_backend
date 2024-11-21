@@ -19,8 +19,8 @@ const getAllPublishers = asyncHandler(async (req, res) => {
 });
 
 const updatePublisher = asyncHandler(async (req, res) => {
-    const { publisherId } = req.params;
-    const publisher = await NhaXuatBan.findByIdAndUpdate(publisherId, req.body, {
+    const { MaNXB } = req.params;
+    const publisher = await NhaXuatBan.findByIdAndUpdate(MaNXB, req.body, {
         new: true,
     });
     return res.status(200).json({
@@ -30,8 +30,8 @@ const updatePublisher = asyncHandler(async (req, res) => {
 });
 
 const deletePublisher = asyncHandler(async (req, res) => {
-    const { publisherId } = req.params;
-    const publisher = await NhaXuatBan.findByIdAndDelete(publisherId);
+    const { MaNXB } = req.params;
+    const publisher = await NhaXuatBan.findByIdAndDelete(MaNXB);
     return res.status(200).json({
         success: publisher ? true : false,
         publisher: publisher ? publisher : 'Delete publisher failed',
