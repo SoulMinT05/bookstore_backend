@@ -5,7 +5,6 @@ const PublisherSchema = new mongoose.Schema(
         TenNXB: {
             type: String,
             required: true,
-            unique: true,
         },
         DiaChi: {
             type: String,
