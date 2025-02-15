@@ -246,16 +246,37 @@ const uploadImagesProduct = asyncHandler(async (req, res) => {
     });
 });
 
-const getProductsByPublisher = asyncHandler(async (req, res, next) => {
-    const { MaNXB } = req.params;
+const getProductsByAutoPublisher = asyncHandler(async (req, res, next) => {
+    try {
+        const publishers = await Publisher.find({}, '_id TenNXB');
 
-    // Tìm các sản phẩm theo MaNXB và populate để lấy thông tin chi tiết của publisher
-    let products = await Sach.find({ MaNXB }).populate('MaNXB', 'TenNXB');
-    products = products.filter((product) => product.MaNXB);
-    return res.status(200).json({
-        success: products.length > 0 ? true : false,
-        products: products,
-    });
+        // Tạo map ID -> TenNXB
+        const publisherMap = publishers.reduce((acc, pub) => {
+            acc[pub._id.toString()] = pub.TenNXB;
+            return acc;
+        }, {});
+
+        const publisherIds = Object.keys(publisherMap);
+
+        // Lấy danh sách sản phẩm
+        const products = await Sach.find({ MaNXB: { $in: publisherIds } });
+
+        // Nhóm sản phẩm theo TenNXB
+        const groupedProducts = products.reduce((acc, product) => {
+            const publisherId = product.MaNXB.toString();
+            const publisherName = publisherMap[publisherId] || 'Unknown products by auto publishers';
+
+            if (!acc[publisherName]) {
+                acc[publisherName] = [];
+            }
+            acc[publisherName].push(product);
+            return acc;
+        }, {});
+
+        res.status(200).json({ success: true, data: groupedProducts });
+    } catch (error) {
+        console.log('err: ', error);
+    }
 });
 
 module.exports = {
@@ -267,5 +288,5 @@ module.exports = {
     deleteProduct,
     ratingProduct,
     uploadImagesProduct,
-    getProductsByPublisher,
+    getProductsByAutoPublisher,
 };

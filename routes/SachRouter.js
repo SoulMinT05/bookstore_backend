@@ -18,6 +18,8 @@ router.get('/relatedProducts', SachController.getProductSimilarPublisher);
 router.get('/getAllProducts', SachController.getAllProducts);
 router.put('/ratingProduct', verifyAccessToken, SachController.ratingProduct);
 
+router.get('/auto-publishers', SachController.getProductsByAutoPublisher);
+
 router.put(
     '/uploadImagesProduct/:productId',
     [verifyAccessToken, checkAdminOrStaff],
@@ -32,6 +34,5 @@ router.put(
     SachController.updateProduct,
 );
 router.delete('/:productId', [verifyAccessToken, checkAdminOrStaff], SachController.deleteProduct);
-router.get('/publisher/:MaNXB', SachController.getProductsByPublisher);
 
 module.exports = router;
