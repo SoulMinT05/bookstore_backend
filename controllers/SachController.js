@@ -1,4 +1,5 @@
 const Sach = require('../models/SachModel');
+const DocGia = require('../models/DocGiaModel');
 const Publisher = require('../models/NhaXuatBanModel');
 const asyncHandler = require('express-async-handler');
 const slugify = require('slugify');
@@ -279,6 +280,60 @@ const getProductsByAutoPublisher = asyncHandler(async (req, res, next) => {
     }
 });
 
+const searchBook = asyncHandler(async (req, res, next) => {
+    const { keyword } = req.query; // Lấy từ khóa từ query params
+    const userId = req.user._id; // Lấy user từ req (giả sử đã có middleware xác thực)
+
+    if (!keyword) {
+        return res.status(400).json({
+            success: false,
+            message: 'Vui lòng nhập từ khóa tìm kiếm.',
+        });
+    }
+
+    // Tìm sách có tên hoặc tác giả chứa từ khóa (không phân biệt hoa thường)
+    const books = await Sach.find({
+        $or: [{ TenSach: { $regex: keyword, $options: 'i' } }, { TacGia: { $regex: keyword, $options: 'i' } }],
+    });
+
+    // Cập nhật lịch sử tìm kiếm của người dùng
+    await DocGia.findByIdAndUpdate(userId, {
+        $push: { searchHistory: { $each: [keyword], $position: 0 } }, // Đưa từ khóa lên đầu mảng
+        $slice: { searchHistory: 10 }, // Giữ tối đa 10 từ khóa gần nhất
+    });
+
+    return res.status(200).json({
+        success: true,
+        message: 'Kết quả tìm kiếm',
+        books,
+    });
+});
+
+// Lấy lịch sử tìm kiếm của người dùng
+const getSearchHistory = asyncHandler(async (req, res) => {
+    const userId = req.user._id; // Lấy user từ req (giả sử đã có middleware xác thực)
+
+    // Lấy user từ DB và chỉ lấy trường search
+    const user = await DocGia.findById(userId).select('searchHistory');
+
+    if (!user) {
+        return res.status(404).json({
+            success: false,
+            message: 'Không tìm thấy người dùng.',
+        });
+    }
+
+    const lastSearch = user.searchHistory?.slice(0, 12) || [];
+
+    console.log('lastSearch: ', lastSearch);
+
+    return res.status(200).json({
+        success: true,
+        message: 'Lịch sử tìm kiếm',
+        searchHistory: lastSearch || [], // Trả về danh sách tìm kiếm hoặc mảng rỗng
+    });
+});
+
 module.exports = {
     createProduct,
     getDetailProduct,
@@ -289,4 +344,6 @@ module.exports = {
     ratingProduct,
     uploadImagesProduct,
     getProductsByAutoPublisher,
+    searchBook,
+    getSearchHistory,
 };

@@ -75,6 +75,7 @@ const UserSchema = new mongoose.Schema(
                 ref: 'Sach',
             },
         ],
+        searchHistory: { type: [String], default: [] },
         isLocked: {
             type: Boolean,
             default: false,

@@ -19,6 +19,8 @@ router.get('/getAllProducts', SachController.getAllProducts);
 router.put('/ratingProduct', verifyAccessToken, SachController.ratingProduct);
 
 router.get('/auto-publishers', SachController.getProductsByAutoPublisher);
+router.get('/search', verifyAccessToken, SachController.searchBook);
+router.get('/getSearchHistory', verifyAccessToken, SachController.getSearchHistory);
 
 router.put(
     '/uploadImagesProduct/:productId',
