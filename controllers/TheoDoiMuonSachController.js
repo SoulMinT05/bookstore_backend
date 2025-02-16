@@ -4,6 +4,7 @@ const NhanVien = require('../models/NhanVienModel');
 const DocGia = require('../models/DocGiaModel');
 const asyncHandler = require('express-async-handler');
 const moment = require('moment-timezone');
+const nodemailer = require('nodemailer');
 
 const createOrder = asyncHandler(async (req, res) => {
     const { orderedProductIds, NgayMuon } = req.body;
@@ -15,7 +16,7 @@ const createOrder = asyncHandler(async (req, res) => {
         .populate('cart.product', 'HinhAnhSach TenSach DonGia');
 
     // Kiểm tra nếu người dùng chưa có thông tin cá nhân cần thiết
-    if (!user.Ho || !user.Ten || !user.email || !user.DiaChi) {
+    if (!user.Ho || !user.Ten || !user.email) {
         return res.status(400).json({
             success: false,
             message: 'Vui lòng nhập đầy đủ thông tin cá nhân trước khi đặt hàng.',
@@ -73,6 +74,73 @@ const createOrder = asyncHandler(async (req, res) => {
         },
     }));
     await Product.bulkWrite(bulkOperations);
+
+    // **Gửi email xác nhận đơn hàng**
+    const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        host: 'smtp.gmail.com',
+        port: 587,
+        secure: false, // Use `true` for port 465, `false` for all other ports
+        auth: {
+            user: process.env.EMAIL_NAME,
+            pass: process.env.EMAIL_APP_PASSWORD,
+        },
+    });
+
+    const formattedStartDate = new Date(newOrder.NgayMuon).toLocaleDateString('vi-VN');
+    const formattedEndDate = new Date(newOrder.NgayTra).toLocaleDateString('vi-VN');
+
+    // Tạo nội dung email
+    const mailOptions = {
+        from: '"SoulBook" <no-reply@soulbook.com>', //
+        to: user.email,
+        subject: 'Xác nhận yêu cầu mượn sách tại SoulBook',
+        html: `
+            <h2>Xin chào ${user.Ho} ${user.Ten},</h2>
+            <p>Bạn đã gửi yêu cầu mượn sách thành công. Dưới đây là chi tiết đơn hàng của bạn:</p>
+            <table border="1" cellpadding="10" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+            <thead>
+                <tr>
+                    <th style="text-align: left;">Hình ảnh</th>
+                    <th style="text-align: left;">Tên sách</th>
+                    <th style="text-align: left;">Số lượng</th>
+                    <th style="text-align: left;">Giá</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${productsToOrder
+                    .map(
+                        (item) =>
+                            `
+                    <tr>
+                        <td>
+                            <img src="${item.product.HinhAnhSach[0]}" alt="${item.product.TenSach}" width="80">
+                        </td>
+                        <td>${item.product.TenSach}</td>
+                        <td>${item.count}</td>
+                        <td>${item.product.DonGia.toLocaleString()} VND</td>
+                    </tr>
+                `,
+                    )
+                    .join('')}
+            </tbody>
+        </table>
+            <p><strong>Tổng số lượng:</strong> ${totalQuantity}</p>
+            <p><strong>Ngày mượn:</strong> ${formattedStartDate}</p>
+            <p><strong>Ngày hết hạn:</strong> ${formattedEndDate}</p>
+            <p><i>Lưu ý ngày hết hạn để trả sách đúng hạn.</p>
+            <p>Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi!</p>
+        `,
+    };
+
+    // Gửi email
+    transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+            console.error('Lỗi gửi email:', error);
+        } else {
+            console.log('Email đã được gửi:', info.response);
+        }
+    });
 
     return res.status(200).json({
         success: true,
