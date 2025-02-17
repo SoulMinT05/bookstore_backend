@@ -7,12 +7,19 @@ const moment = require('moment-timezone');
 const nodemailer = require('nodemailer');
 
 const createOrder = asyncHandler(async (req, res) => {
-    const { orderedProductIds, NgayMuon } = req.body;
+    const { orderedProductIds, NgayMuon, daysToBorrow } = req.body;
     const currentUser = req.user._id;
 
     // Kiểm tra nếu NgayMuon cách ngày hiện tại ít nhất 5 ngày
     const currentDate = new Date();
     const minimumDate = new Date(currentDate.setDate(currentDate.getDate() + 6));
+
+    if (!daysToBorrow) {
+        return res.status(400).json({
+            success: false,
+            message: 'Cần nhập số ngày mượn.',
+        });
+    }
 
     if (new Date(NgayMuon) < minimumDate) {
         return res.status(400).json({
@@ -61,6 +68,8 @@ const createOrder = asyncHandler(async (req, res) => {
     const totalQuantity = productsToOrder.reduce((acc, current) => acc + current.count, 0);
     console.log('totalQuantity: ', totalQuantity);
 
+    const NgayTra = new Date(new Date(NgayMuon).getTime() + daysToBorrow * 24 * 60 * 60 * 1000);
+    console.log('12');
     // Tạo đơn hàng mới
     const newOrder = await Order.create({
         MaSach: productsToOrder,
@@ -68,7 +77,11 @@ const createOrder = asyncHandler(async (req, res) => {
         MaDocGia: currentUser,
         // NgayMuon: parsedNgayMuon,
         NgayMuon,
+        NgayTra,
+        daysToBorrow,
     });
+
+    console.log('newOrder: ', newOrder);
 
     // Lưu đơn hàng
     await newOrder.save();

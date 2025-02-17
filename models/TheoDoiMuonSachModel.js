@@ -20,6 +20,11 @@ const orderSchema = new mongoose.Schema(
             type: String,
             // required: true,
         },
+        daysToBorrow: {
+            type: Number, // Số ngày mượn sách, admin có thể CRUD
+            enum: [7, 14, 21, 30, 60], // Các giá trị mà admin có thể chọn
+            required: true,
+        },
         NgayTao: {
             type: Date,
             default: Date.now,
@@ -32,7 +37,9 @@ const orderSchema = new mongoose.Schema(
             type: Date,
             required: true,
             default: function () {
-                return this.NgayMuon ? new Date(this.NgayMuon.getTime() + 30 * 24 * 60 * 60 * 1000) : null;
+                return this.NgayMuon
+                    ? new Date(this.NgayMuon.getTime() + this.daysToBorrow * 24 * 60 * 60 * 1000)
+                    : null;
             },
         },
         TinhTrang: {
