@@ -266,7 +266,7 @@ const updateInfoFromUser = asyncHandler(async (req, res) => {
     if (!_id || Object.keys(req.body).length === 0) {
         throw new Error('Miss input');
     }
-    if (!/^(09|03|07|08|05)\d{8}$/.test(req.body.DienThoai)) {
+    if (req.body.DienThoai && !/^(09|03|07|08|05)\d{8}$/.test(req.body.DienThoai)) {
         return res
             .status(400)
             .json({ message: 'Số điện thoại phải có 10 chữ số và bắt đầu bằng 09, 03, 07, 08 hoặc 05.' });
