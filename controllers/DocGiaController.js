@@ -81,7 +81,7 @@ const login = asyncHandler(async (req, res, next) => {
             },
         });
     } else {
-        throw new Error('Có lỗi khi đăng nhập!');
+        throw new Error('Có lỗi khi đăng nhập! Hãy kiểm tra thông tin đăng nhập');
     }
 });
 

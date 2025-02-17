@@ -16,24 +16,23 @@ const orderSchema = new mongoose.Schema(
                 count: Number,
             },
         ],
-        // coupon: {
-        //     type: mongoose.Types.ObjectId,
-        //     ref: 'Coupon',
-        // },
         DiaChi: {
             type: String,
             // required: true,
         },
+        NgayTao: {
+            type: Date,
+            default: Date.now,
+        },
         NgayMuon: {
             type: Date,
             required: true,
-            default: Date.now,
         },
         NgayTra: {
             type: Date,
             required: true,
             default: function () {
-                return new Date(this.NgayMuon.getTime() + 30 * 24 * 60 * 60 * 1000);
+                return this.NgayMuon ? new Date(this.NgayMuon.getTime() + 30 * 24 * 60 * 60 * 1000) : null;
             },
         },
         TinhTrang: {

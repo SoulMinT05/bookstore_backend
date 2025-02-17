@@ -10,6 +10,17 @@ const createOrder = asyncHandler(async (req, res) => {
     const { orderedProductIds, NgayMuon } = req.body;
     const currentUser = req.user._id;
 
+    // Kiểm tra nếu NgayMuon cách ngày hiện tại ít nhất 5 ngày
+    const currentDate = new Date();
+    const minimumDate = new Date(currentDate.setDate(currentDate.getDate() + 6));
+
+    if (new Date(NgayMuon) < minimumDate) {
+        return res.status(400).json({
+            success: false,
+            message: 'Ngày mượn phải cách ngày hiện tại ít nhất 7 ngày.',
+        });
+    }
+
     // Lấy thông tin người dùng từ database
     const user = await DocGia.findById(currentUser)
         .select('Ho Ten email DiaChi cart')
@@ -87,6 +98,7 @@ const createOrder = asyncHandler(async (req, res) => {
         },
     });
 
+    const formattedSendRequestDate = new Date(newOrder.NgayTao).toLocaleDateString('vi-VN');
     const formattedStartDate = new Date(newOrder.NgayMuon).toLocaleDateString('vi-VN');
     const formattedEndDate = new Date(newOrder.NgayTra).toLocaleDateString('vi-VN');
 
@@ -126,8 +138,11 @@ const createOrder = asyncHandler(async (req, res) => {
             </tbody>
         </table>
             <p><strong>Tổng số lượng:</strong> ${totalQuantity}</p>
-            <p><strong>Ngày mượn:</strong> ${formattedStartDate}</p>
+            <p><strong>Ngày gửi yêu cầu mượn:</strong> ${formattedSendRequestDate}</p>
+            <p><strong>Ngày bắt đầu mượn:</strong> ${formattedStartDate}</p>
             <p><strong>Ngày hết hạn:</strong> ${formattedEndDate}</p>
+            <p><strong>Trạng thái:</strong> Đang xử lý</p>
+            <p><i>Đơn hàng sẽ được duyệt trong 3 ngày không tính ngày cuối tuần. Sau đó, bạn có thể nhận sách ở quầy.</p>
             <p><i>Lưu ý ngày hết hạn để trả sách đúng hạn.</p>
             <p>Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi!</p>
         `,
@@ -196,7 +211,7 @@ const updateStatusOrder = asyncHandler(async (req, res) => {
     const { TinhTrang } = req.body;
     if (!TinhTrang) throw new Error('Missing input TinhTrang order');
 
-    const cancelOrder = await Order.findById(orderId)
+    const updatedOrder = await Order.findById(orderId)
         .populate({
             path: 'MaDocGia', // Populate thông tin người đặt hàng
             select: 'Ho Ten DiaChi email', // Chỉ lấy các trường name và email
@@ -206,24 +221,31 @@ const updateStatusOrder = asyncHandler(async (req, res) => {
             select: 'TenSach HinhAnhSach SoQuyen', // Chỉ lấy các trường name, HinhAnhSach, và SoQuyen
         });
 
-    if (!cancelOrder) {
+    if (!updatedOrder) {
         return res.status(404).json({
             success: false,
             message: 'Đơn hàng không tồn tại',
         });
     }
 
-    if (cancelOrder.TinhTrang === 'cancel') {
+    if (updatedOrder.TinhTrang === 'cancel') {
         return res.status(400).json({
             success: false,
             message: 'Không thể thay đổi trạng thái vì đã huỷ đơn',
         });
     }
 
+    // if (TinhTrang === 'approved') {
+    //     updatedOrder.NgayBatDauMuon = new Date(); // Ngày bắt đầu mượn là ngày duyệt đơn
+    //     updatedOrder.NgayTra = new Date(updatedOrder.NgayBatDauMuon.getTime() + 30 * 24 * 60 * 60 * 1000); // Tính Ngày trả sách (30 ngày sau Ngày bắt đầu mượn)
+    // }
+
     const order = await Order.findByIdAndUpdate(
         orderId,
         {
             TinhTrang,
+            // NgayBatDauMuon: updatedOrder.NgayBatDauMuon,
+            // NgayTra: updatedOrder.NgayTra,
         },
         {
             new: true,
