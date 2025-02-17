@@ -11,7 +11,7 @@ const app = express();
 
 app.use(
     cors({
-        origin: 'http://localhost:5731', // Cho phép yêu cầu từ localhost:3000
+        origin: process.env.URI_CLIENT,
     }),
 );
 
