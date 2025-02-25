@@ -248,11 +248,6 @@ const updateStatusOrder = asyncHandler(async (req, res) => {
         });
     }
 
-    // if (TinhTrang === 'approved') {
-    //     updatedOrder.NgayBatDauMuon = new Date(); // Ngày bắt đầu mượn là ngày duyệt đơn
-    //     updatedOrder.NgayTra = new Date(updatedOrder.NgayBatDauMuon.getTime() + 30 * 24 * 60 * 60 * 1000); // Tính Ngày trả sách (30 ngày sau Ngày bắt đầu mượn)
-    // }
-
     const order = await Order.findByIdAndUpdate(
         orderId,
         {
@@ -272,6 +267,81 @@ const updateStatusOrder = asyncHandler(async (req, res) => {
             path: 'MaSach.product', // Populate lại thông tin sản phẩm
             select: 'TenSach HinhAnhSach SoQuyen',
         });
+
+    // **Gửi email xác nhận đơn hàng**
+    const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        host: 'smtp.gmail.com',
+        port: 587,
+        secure: false, // Use `true` for port 465, `false` for all other ports
+        auth: {
+            user: process.env.EMAIL_NAME,
+            pass: process.env.EMAIL_APP_PASSWORD,
+        },
+    });
+
+    console.log('updatedOrder: ', updatedOrder);
+    console.log('order: ', order);
+
+    const formattedSendRequestDate = new Date(updatedOrder.NgayTao).toLocaleDateString('vi-VN');
+    const formattedStartDate = new Date(updatedOrder.NgayMuon).toLocaleDateString('vi-VN');
+    const formattedEndDate = new Date(updatedOrder.NgayTra).toLocaleDateString('vi-VN');
+
+    // Tạo nội dung email
+    // const mailOptions = {
+    //     from: '"SoulBook" <no-reply@soulbook.com>', //
+    //     to: updatedOrder.MaDocGia.email,
+    //     subject: 'Xác nhận lại yêu cầu mượn sách tại SoulBook',
+    //     html: `
+    //         <h2>Xin chào ${updatedOrder.MaDocGia.Ho} ${updatedOrder.MaDocGia.Ten},</h2>
+    //         <p>Bạn đã gửi yêu cầu mượn sách thành công. Dưới đây là chi tiết đơn hàng của bạn:</p>
+    //         <table border="1" cellpadding="10" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+    //         <thead>
+    //             <tr>
+    //                 <th style="text-align: left;">Hình ảnh</th>
+    //                 <th style="text-align: left;">Tên sách</th>
+    //                 <th style="text-align: left;">Số lượng</th>
+    //                 <th style="text-align: left;">Giá</th>
+    //             </tr>
+    //         </thead>
+    //         <tbody>
+    //             ${updatedOrder
+    //                 .map(
+    //                     (item) =>
+    //                         `
+    //                 <tr>
+    //                     <td>
+    //                         <img src="${item.product.HinhAnhSach[0]}" alt="${item.product.TenSach}" width="80">
+    //                     </td>
+    //                     <td>${item.product.TenSach}</td>
+    //                     <td>${item.count}</td>
+    //                     <td>${item.product.DonGia.toLocaleString()} VND</td>
+    //                 </tr>
+    //             `,
+    //                 )
+    //                 .join('')}
+    //         </tbody>
+    //     </table>
+    //         <p><strong>Tổng số lượng:</strong> ${totalQuantity}</p>
+    //         <p><strong>Ngày gửi yêu cầu mượn:</strong> ${formattedSendRequestDate}</p>
+    //         <p><strong>Ngày bắt đầu mượn:</strong> ${formattedStartDate}</p>
+    //         <p><strong>Ngày hết hạn:</strong> ${formattedEndDate}</p>
+    //         <p><strong>Trạng thái:</strong> Đang xử lý</p>
+    //         <p><i>Đơn hàng sẽ được duyệt trong 3 ngày không tính ngày cuối tuần. Sau đó, bạn có thể nhận sách ở quầy.</p>
+    //         <p><i>Lưu ý ngày hết hạn để trả sách đúng hạn.</p>
+    //         <p>Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi!</p>
+    //     `,
+    // };
+
+    // // Gửi email
+    // transporter.sendMail(mailOptions, (error, info) => {
+    //     if (error) {
+    //         console.error('Lỗi gửi email:', error);
+    //     } else {
+    //         console.log('Email đã được gửi:', info.response);
+    //     }
+    // });
+
     return res.status(200).json({
         success: order ? true : false,
         order: order ? order : 'Update TinhTrang order failed',

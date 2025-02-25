@@ -296,11 +296,26 @@ const searchBook = asyncHandler(async (req, res, next) => {
         $or: [{ TenSach: { $regex: keyword, $options: 'i' } }, { TacGia: { $regex: keyword, $options: 'i' } }],
     });
 
+    const user = await DocGia.findById(userId);
+    if (!user) {
+        return res.status(404).json({
+            success: false,
+            message: 'Không tìm thấy người dùng.',
+        });
+    }
+
     // Cập nhật lịch sử tìm kiếm của người dùng
-    await DocGia.findByIdAndUpdate(userId, {
-        $push: { searchHistory: { $each: [keyword], $position: 0 } }, // Đưa từ khóa lên đầu mảng
-        $slice: { searchHistory: 10 }, // Giữ tối đa 10 từ khóa gần nhất
-    });
+    // await DocGia.findByIdAndUpdate(userId, {
+    //     $push: { searchHistory: { $each: [keyword], $position: 0 } }, // Đưa từ khóa lên đầu mảng
+    //     $slice: { searchHistory: 10 }, // Giữ tối đa 10 từ khóa gần nhất
+    // });
+
+    if (!user.searchHistory.includes(keyword)) {
+        await DocGia.findByIdAndUpdate(userId, {
+            $push: { searchHistory: { $each: [keyword], $position: 0 } }, // Đưa từ khóa lên đầu
+            $slice: { searchHistory: 10 }, // Giữ tối đa 10 từ khóa gần nhất
+        });
+    }
 
     return res.status(200).json({
         success: true,
