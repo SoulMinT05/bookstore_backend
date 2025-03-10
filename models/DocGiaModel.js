@@ -27,6 +27,10 @@ const UserSchema = new mongoose.Schema(
             type: String,
             // required: true,
         },
+        avatar: {
+            type: String,
+            required: false,
+        },
         email: {
             type: String,
             unique: true,
@@ -50,7 +54,7 @@ const UserSchema = new mongoose.Schema(
         },
         password: {
             type: String,
-            required: true,
+            required: false,
         },
         // cart: {
         //     type: Array,
